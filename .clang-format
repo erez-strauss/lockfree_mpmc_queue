@@ -1,0 +1,22 @@
+
+BasedOnStyle: Google
+IndentWidth: 4
+SpaceAfterTemplateKeyword: false
+ColumnLimit: 120
+AccessModifierOffset: -4
+#AlwaysBreakTemplateDeclarations: false
+
+BraceWrapping:
+  AfterClass:      true
+  AfterControlStatement: true
+  AfterEnum:       false
+  AfterFunction:   true
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     true
+  AfterUnion:      true
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+BreakBeforeBraces: Custom
+
