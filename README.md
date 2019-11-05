@@ -176,7 +176,7 @@ make report
 
 ## Feedback
 
-Please send my your feedback to Erez Strauss <erez@erezstrauss.com> with subject line MPMCQ ...
+Please send your feedback to Erez Strauss <erez@erezstrauss.com> with subject line MPMCQ ...
 
 ## Acknowledgement
 
