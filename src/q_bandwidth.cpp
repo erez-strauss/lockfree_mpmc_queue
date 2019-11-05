@@ -41,7 +41,14 @@ namespace boost::lockfree {
 // This operator is defined as it is required for the timing benchmark, as it tries to print a Queue state in case of
 // error.
 template<typename DT, size_t QD>
-inline std::ostream& operator<<(std::ostream& os, boost::lockfree::queue<DT, boost::lockfree::capacity<QD>>&)
+inline std::ostream& operator<<(std::ostream& os, queue<DT, capacity<QD>>&)
+{
+    os << " nothing to print for boost queue";
+    return os;
+}
+
+template<typename DT>
+inline std::ostream& operator<<(std::ostream& os, queue<DT, fixed_sized<true>>&)
 {
     os << " nothing to print for boost queue";
     return os;
@@ -66,15 +73,30 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
     if (test_boostq)
     {
 #if defined(COMPARE_BOOST) && COMPARE_BOOST == 1
-        using QUT2 = boost::lockfree::queue<DT, boost::lockfree::capacity<Q_DEPTH>>;
-        QUT2 boost_q{};
+        if (qdepth == Q_DEPTH)
+        {
+            using QUT2 = boost::lockfree::queue<DT, boost::lockfree::capacity<Q_DEPTH>>;
+            QUT2 boost_q{};
 
-        std::cout << "Q BW: data size: " << sizeof(DT) << " -     -     -"
-                  << " capacity: " << std::setw(3) << qdepth << " producers: " << producers
-                  << " conuumers: " << consumers << " for: " << millis << "ms ";
+            std::cout << "Q BW: data size: " << sizeof(DT) << " -     -     -"
+                      << " capacity: " << std::setw(3) << qdepth << " producers: " << producers
+                      << " conuumers: " << consumers << " for: " << millis << "ms ";
 
-        es::lockfree::tests::QBandwidth<QUT2> bwt2(boost_q, producers, consumers, millis);
-        bwt2.run("boost:lf:queue");
+            es::lockfree::tests::QBandwidth<QUT2> bwt2(boost_q, producers, consumers, millis);
+            bwt2.run("boost:lf:queue");
+        }
+        else
+        {
+            using QUT2 = boost::lockfree::queue<DT, boost::lockfree::fixed_sized<true>>;
+            QUT2 boost_q{qdepth};
+
+            std::cout << "Q BW: data size: " << sizeof(DT) << " -     -     -"
+                      << " capacity: " << std::setw(3) << qdepth << " producers: " << producers
+                      << " conuumers: " << consumers << " for: " << millis << "ms ";
+
+            es::lockfree::tests::QBandwidth<QUT2> bwt2(boost_q, producers, consumers, millis);
+            bwt2.run("boost:lf:queue");
+        }
 #else
         std::cerr << "q_bandwidth was built without comparison to boost::lockfree::queue\n";
         exit(1);

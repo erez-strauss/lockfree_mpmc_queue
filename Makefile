@@ -7,12 +7,10 @@ TARGETS:= $(BDIR)/gtest_mpmc $(BDIR)/shared_q_test $(BDIR)/q_bandwidth
 
 ISBOOSTAVAILABLE:=$(shell if [[ -f /usr/include/boost/lockfree/queue.hpp ]] ; then echo 1 ; else echo 0 ; fi)
 
-CXX:=clang++
-#CXXFLAGS:= -mavx -msse -fwhole-program -mcx16 -pthread -W -Wall -Wshadow -Wextra -pedantic -O2 -flto --std=c++2a -ggdb3 -lpthread
-# CXXFLAGS:= -mavx -msse -mcx16 -pthread -W -Wall -Wshadow -Wextra -pedantic -O3 --std=c++2a -ggdb3 -lpthread -fverbose-asm --save-temps
-# CXXFLAGS:= -I. -Isrc -O3 -march=native -mtune=native -mavx -msse4.2 -mcx16 -pthread -W -Wall -Wshadow -Wextra -pedantic --std=c++2a -ggdb3 -flto -fverbose-asm --save-temps
+#CXX:=clang++
+#CXXFLAGS:= -I. -Isrc -O3 -march=native -mtune=native -mavx -msse4.2 -mcx16 -pthread -W -Wall -Wshadow -Wextra -pedantic --std=c++2a -ggdb3 -flto -fverbose-asm --save-temps
 #LDFLAGS := -lpthred -latomic
-CXXFLAGS:= -I. -Isrc -O3 -march=native -mtune=native -mcx16 -pthread -W -Wall -Wshadow -Wextra -pedantic --std=c++2a -ggdb3 -flto
+CXXFLAGS:= -I. -Isrc -O3 -march=native -mtune=native -mcx16 -pthread -W -Wall -Wshadow -Wextra --std=c++2a
 LDFLAGS := -lpthread
 LINK.o := $(LINK.cc)
 
