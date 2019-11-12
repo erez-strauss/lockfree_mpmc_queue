@@ -64,6 +64,11 @@ inline void testPushPop(QT &qut)
     qut.push(w);
     qut.pop(r);
     EXPECT_EQ(w, r);
+    typename QT::value_type wq{199};
+    typename QT::value_type rq{0};
+    qut.enqueue(wq);
+    qut.dequeue(rq);
+    EXPECT_EQ(wq, rq);
 }
 
 TEST(MPMC_Queue_FunctionalityTest, PushOne)

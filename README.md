@@ -1,5 +1,5 @@
 # mpmc_queue
-atomic, lockfree, multi producers, multi consumers queue
+atomic, lockfree, multi producer, multi consumer queue
 
 ## Available at
 http://github.com/erez-strauss/lockfree_mpmc_queue/

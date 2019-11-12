@@ -52,6 +52,18 @@ $(BDIR)/%.o: $(BDIR)/.f
 $(BDIR)/%.o: src/%.cpp  | $(BDIR)/.f
 	$(CXX) $(CXXFLAGS) -I. -Isrc -DGTEST_HAS_PTHREAD=1 -pthread -c -o $@ $<
 
+ifeq ($(PREFIX),)
+    PREFIX := /usr/local
+endif
+
+install: gtest_run
+	install -d $(DESTDIR)$(PREFIX)/share/lockfree_mpmc_queue/
+	install -m 644 LICENSE $(DESTDIR)$(PREFIX)/share/lockfree_mpmc_queue/
+	install -m 644 README.md $(DESTDIR)$(PREFIX)/share/lockfree_mpmc_queue/
+	install -d $(DESTDIR)$(PREFIX)/include/es/lockfree
+	install -m 644 mpmc_queue.h $(DESTDIR)$(PREFIX)/include/es/lockfree/
+	install -m 644 shared_mpmc_queue.h $(DESTDIR)$(PREFIX)/include/es/lockfree/
+
 # $(BDIR)/%: $$(@D)/.f
 
 $(BDIR)/.f:
