@@ -68,6 +68,45 @@ The es::lockfree::mpmc_queue<DataT, size_t N, IndexT=uint32_t, bool lazy_push=fa
 * pop_if(data_type& d, F& condition) -- evaluate the condition on the current head of the queue, if evaluated to true, try to pop the element, returns true if pop succeed, false if condition is not true or queue is empty
 * consume(function) -- consume repeatably the element in the queue, stops when queue is empty or the function returned true to terminate, returns number of elments that were consumed
 
+## Example
+```cpp
+#include <mpmc_queue.h>
+#include <iostream>
+#include <thread>
+
+int main()
+{
+    constexpr unsigned N{100};
+    es::lockfree::mpmc_queue<unsigned, 32> q{};
+    unsigned prod_sum{0};
+    unsigned cons_sum{0};
+
+    std::thread prod{[&]() {
+        for (unsigned x = 0; x < N; ++x)
+        {
+            while (!q.push(x))
+                ;
+            prod_sum += x;
+        }
+    }};
+    std::thread cons{[&]() {
+        unsigned v{0};
+        for (unsigned x = 0; x < N; ++x)
+        {
+            while (!q.pop(v))
+                ;
+            cons_sum += v;
+        }
+    }};
+    prod.join();
+    cons.join();
+    std::cout << (cons_sum && cons_sum == prod_sum ? "OK" : "ERROR") << " " << cons_sum << '\n';
+    return 0;
+}
+```
+
+you can try the example using: make build/example1
+
 ## Implementation
 
 ### Operation

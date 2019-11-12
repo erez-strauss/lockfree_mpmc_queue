@@ -261,8 +261,7 @@ void TestApp::args(int argc, char** argv)
             case 'c':
                 _readers = atoi(optarg);
                 break;
-            case 'd':
-            {
+            case 'd': {
                 int x{atoi(optarg)};
                 if (x > 0)
                     _q_depth = x;

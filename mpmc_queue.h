@@ -284,7 +284,7 @@ public:
     mpmc_queue& operator=(const mpmc_queue&) = delete;
     mpmc_queue& operator=(mpmc_queue&&) = delete;
 
-    [[using gnu: hot, flatten]] bool enqueue(value_type d) noexcept { return push (d); }
+    [[using gnu: hot, flatten]] bool enqueue(value_type d) noexcept { return push(d); }
 
     [[using gnu: hot, flatten]] bool push(value_type d) noexcept
     {
@@ -322,7 +322,7 @@ public:
         }
     }
 
-    [[using gnu: hot, flatten]] bool dequeue(value_type& d) noexcept { return pop (d); }
+    [[using gnu: hot, flatten]] bool dequeue(value_type& d) noexcept { return pop(d); }
 
     [[using gnu: hot, flatten]] bool pop(value_type& d) noexcept
     {
@@ -401,7 +401,7 @@ public:
         }
     }
 
-    [[using gnu: hot, flatten]] bool dequeue (value_type& d, index_type& i) noexcept { return pop(d, i); }
+    [[using gnu: hot, flatten]] bool dequeue(value_type& d, index_type& i) noexcept { return pop(d, i); }
 
     [[using gnu: hot, flatten]] bool pop(value_type& d, index_type& i) noexcept
     {
