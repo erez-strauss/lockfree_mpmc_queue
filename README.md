@@ -1,9 +1,12 @@
 # mpmc_queue
 atomic, lockfree, multi producers, multi consumers queue
 
+## Available at
+http://github.com/erez-strauss/lockfree_mpmc_queue/
+
 ## The queue requirements
 
-* simple, header only, multi producer, multi consumer queue
+* a header only, lockfree, multi producer, multi consumer queue
 * trivial data type, no need for move semantics
 * no memory allocation, other than initialization
 * none-blocking - no two operation that must be completed by a single producer or consumer
@@ -17,7 +20,7 @@ atomic, lockfree, multi producers, multi consumers queue
 * fixed size array of entries, array size must be power of 2
 * each entry is in a separate cacheline - prevents producers and consumers contention.
 * _array entries contain sequence number and the user data
-* all change operation are done using compare_exchange, both for entries and indexes 
+* all change operations are done using compare_exchange, both for entries and indexes
 * atomic write / read indexes
 * push/pop operation are defined successful, once the array entry has changed successfully
 * updating the write/read indexes is cooperative
@@ -27,7 +30,7 @@ atomic, lockfree, multi producers, multi consumers queue
 * entry has two states: empty or full - indicate by the low bit of the _seq entry's field
 * empty entry contain sequence number of the next write
 * push(T d) loads the write index, look at the entry in the buffer,if it contains the value of the index,and  entry is
- empty then attempt compare and exchange with a new value which includes the same sequence number with indication that the entry is full.  
+ empty then attempt compare and exchange with a new value which includes the same sequence number with indication that the entry is full.
 * pop(T& d) loads the read index, load the entry from the array, if the entry has the read sequence number and is full,
  do compare and exchange with a new empty entry value for the next write operation on the same entry
 * lazy push/pop are available as template parameters, where increasing the respective index is left to other producer , consumer to complete
@@ -53,7 +56,7 @@ The es::lockfree::mpmc_queue<DataT, size_t N, IndexT=uint32_t, bool lazy_push=fa
 ### Producer
 
 * push(data_type d) -- pushes d into the queue tail, returns true on success, false on full queue.
-* push(data_type d, index_type& i) -- pushes d into the queue and sets i to the sequence number of the successful push(), returns true on success, false on full queue. 
+* push(data_type d, index_type& i) -- pushes d into the queue and sets i to the sequence number of the successful push(), returns true on success, false on full queue.
 * push_keep_n(data_type d) -- pushes d into the queue, if the queue is full, it will pop()/discard one data element from the queue and will retry to push it into the queue, returns true after successful placement into the queue.
 
 ### Consumer
@@ -80,10 +83,10 @@ The sequence number inside the _array entries hold the value of (index<<1) for e
 odd value for entry with data.
 
 * Initialization - clear the _array entries, place the _seq (index<<1) empty/even values indicating the empty entries
- 
+
 * push(value_type d) - as value_type are expected to be small, they are passed by value and not const reference. returns true on successful push(), false if queue is full
- 
-* pop(value_type& d) - true if popped an element, false if queue is empty. 
+
+* pop(value_type& d) - true if popped an element, false if queue is empty.
 
 * empty() - true if queue is empty, progress the _read_index if needed
 * consume() - consumes one or more elements, ends on empty queue or true return value from the fanctor
@@ -113,10 +116,10 @@ odd value for entry with data.
 
 In short, push/pop - has two compare_and_set operations, first one on the array, and then on the index.
 * As the compare_and_set operations can be executed by different threads, there is also an option to instantiate the mpmc_queue<> in lazy mode, where the push/op return after the successful _array[] operation, and leave the indexes to be increamented by the next push/pop operation (in the same thread or other).
-  
+
 
 ### Internal data members
- 
+
 * _write_index
 * _read_index
 * _index_mask
@@ -147,7 +150,7 @@ std::Cout <<  ( value == 123 )
 * make -- builds the tests and the performance benchmarks in the build directory
 * make cmake -- call cmake to build the same as above
 * make report -- will build and run a performance bandwidth report
-* make install -- copy the include files to the /use/local/include/es/lockfree/ 
+* make install -- copy the include files to the /use/local/include/es/lockfree/
 the package has two header files for
 ## Testing
 

@@ -5,6 +5,7 @@
 // MIT License
 //
 // Copyright (c) 2019 Erez Strauss, erez@erezstrauss.com
+//  http://github.com/erez-strauss/lockfree_mpmc_queue/
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,14 +28,14 @@
 
 #include <hash_signature.h>
 #include <mpmc_queue.h>
-
+//
+#include <gtest/gtest.h>
+//
 #include <atomic>
 #include <iostream>
 #include <mutex>
 #include <sstream>
 #include <thread>
-
-#include <gtest/gtest.h>
 
 struct Globals
 {

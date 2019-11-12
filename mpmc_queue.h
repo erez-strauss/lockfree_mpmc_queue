@@ -4,6 +4,7 @@
 // MIT License
 //
 // Copyright (c) 2019 Erez Strauss, erez@erezstrauss.com
+//  http://github.com/erez-strauss/lockfree_mpmc_queue/
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +36,7 @@
 
 namespace es::lockfree {
 
-using uint128_t = unsigned __int128;
+__extension__ using uint128_t = unsigned __int128;
 
 template<size_t S>
 struct unit_value

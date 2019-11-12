@@ -3,14 +3,21 @@ BDIR:=./build
 
 VPATH := src:.
 
-TARGETS:= $(BDIR)/gtest_mpmc $(BDIR)/shared_q_test $(BDIR)/q_bandwidth
+GTEST_INCLUDEDIR := $(shell if [[ -d /usr/include/gtest ]]; then echo /usr/include ; fi )
+GTEST_LIBDIR := $(shell if [[ -f /usr/lib64/libgtest.so ]]; then echo /usr/lib64 ; fi )
+
+TARGETS:= $(BDIR)/shared_q_test $(BDIR)/q_bandwidth
+
+ifneq ($(GTEST_INCLUDEDIR),)
+	TARGETS += $(BDIR)/gtest_mpmc
+endif
 
 ISBOOSTAVAILABLE:=$(shell if [[ -f /usr/include/boost/lockfree/queue.hpp ]] ; then echo 1 ; else echo 0 ; fi)
 
-#CXX:=clang++
-#CXXFLAGS:= -I. -Isrc -O3 -march=native -mtune=native -mavx -msse4.2 -mcx16 -pthread -W -Wall -Wshadow -Wextra -pedantic --std=c++2a -ggdb3 -flto -fverbose-asm --save-temps
-#LDFLAGS := -lpthred -latomic
-CXXFLAGS:= -I. -Isrc -O3 -march=native -mtune=native -mcx16 -pthread -W -Wall -Wshadow -Wextra --std=c++2a
+#CXX:=g++
+CXX:=clang++
+#CXXFLAGS:= --std=c++17 -mcx16 -pthread -W -Wall -Wshadow -Wextra -Wpedantic -I. -Isrc -O2 -ggdb3 -lpthread
+CXXFLAGS:= --std=c++17 -mcx16 -pthread -W -Wall -Wshadow -Wextra -Wpedantic -I. -Isrc -O3 -march=native -mtune=native -flto
 LDFLAGS := -lpthread
 LINK.o := $(LINK.cc)
 
@@ -38,7 +45,7 @@ $(BDIR)/q_bandwidth: $(BDIR)/q_bandwidth.o
 
 .PHONY: report
 report: | $(BDIR)/q_bandwidth
-	./scripts/bw-report.sh ./build/q_bandwidth 
+	./scripts/bw-report.sh ./build/q_bandwidth
 
 $(BDIR)/%.o: $(BDIR)/.f
 

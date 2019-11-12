@@ -5,6 +5,7 @@
 // MIT License
 //
 // Copyright (c) 2019 Erez Strauss, erez@erezstrauss.com
+//  http://github.com/erez-strauss/lockfree_mpmc_queue/
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +28,11 @@
 
 #pragma once
 
-#include <iostream>
-
 #include <atomic>
+#include <iostream>
 #include <thread>
 #include <vector>
-
+//
 #include <stdlib.h>  // abort()
 #include <sys/time.h>
 #include <unistd.h>

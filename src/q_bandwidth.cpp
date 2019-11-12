@@ -5,6 +5,7 @@
 // MIT License
 //
 // Copyright (c) 2019 Erez Strauss, erez@erezstrauss.com
+//  http://github.com/erez-strauss/lockfree_mpmc_queue/
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +26,15 @@
 // SOFTWARE.
 //
 
-#include "mpmc_queue.h"
-#include "mpmc_queue_timing.h"
+#include <mpmc_queue.h>
+#include <mpmc_queue_timing.h>
 
-#include <atomic>
-#include <functional>
 #if defined(COMPARE_BOOST) && COMPARE_BOOST == 1
 #include <boost/lockfree/queue.hpp>
 #endif
+
+#include <atomic>
+#include <functional>
 #include <thread>
 #include <vector>
 

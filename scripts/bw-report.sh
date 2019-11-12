@@ -37,7 +37,11 @@ PRODUCERS=( 1 2 4 8 16 )
 CONSUMERS=( 1 2 4 8 16 )
 DATASIZES=( 4 8 12 )
 INDXSIZES=( 4 8 )
-BOOSTQ=" -b "; # if boost is available
+BOOSTQ=" -b ";
+if ! ${BWCMD} -m 20 -b > /dev/null 2>&1 ;then
+	BOOSTQ=""
+fi
+
 
 loopn=0
 
