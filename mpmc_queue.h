@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <type_traits>
 
 namespace es::lockfree {
 
@@ -105,7 +106,7 @@ public:
     [[nodiscard]] size_t capacity() const noexcept { return _n; }
 };
 
-template<typename DataT, size_t N, typename IndexT = uint32_t, bool lazy_push = false, bool lazy_pop = false>
+template<typename DataT, size_t N = 0, typename IndexT = uint32_t, bool lazy_push = false, bool lazy_pop = false>
 class mpmc_queue
 {
 public:
@@ -250,8 +251,8 @@ private:
 
     inline static constexpr size_t cachelinesize{64};
 
-    using array_t = typename std::conditional<N == 0, array_runtime<aligned_type<entry, cachelinesize>, 0>,
-                                              array_inplace<aligned_type<entry, cachelinesize>, N>>::type;
+    using array_t = typename std::conditional<N == 0, array_runtime<aligned_type<entry, 2 * cachelinesize>, 0>,
+                                              array_inplace<aligned_type<entry, 2 * cachelinesize>, N>>::type;
 
 public:
     explicit mpmc_queue(uint64_t n = N) : _write_index(0), _read_index(0), _size(n), _index_mask(n - 1), _array(n)
