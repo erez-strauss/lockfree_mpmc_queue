@@ -325,8 +325,12 @@ TEST(MPMC_Queue_FunctionalityTest, PushPopIndex)
 
 struct Data12
 {
-    uint16_t a{0}, b{0}, c{0};
-};
+    Data12() = default;
+    Data12(uint64_t v0, uint16_t v1 = 0, uint16_t v2 = 0) : a(v0), b(v1), c(v2) {}
+    uint64_t a;
+    uint16_t b, c;
+} __attribute__((packed));
+static_assert(sizeof(Data12) == 12, "something wrong");
 
 std::ostream &operator<<(std::ostream &os, const Data12 &d12)
 {

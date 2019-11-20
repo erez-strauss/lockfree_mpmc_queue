@@ -143,22 +143,12 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
 
 struct Data12
 {
-    Data12(uint64_t = 0) {}
-
-    uint8_t _data[12];
-};
-struct Data14
-{
-    Data14(uint64_t = 0) {}
-
-    uint8_t _data[14];
-};
-struct Data15
-{
-    Data15(uint64_t = 0) {}
-
-    uint8_t _data[15];
-};
+    Data12() = default;
+    Data12(uint64_t v0, uint16_t v1 = 0, uint16_t v2 = 0) : a(v0), b(v1), c(v2) {}
+    uint64_t a;
+    uint16_t b, c;
+} __attribute__((packed));
+static_assert(sizeof(Data12) == 12, "something wrong");
 
 inline std::ostream& operator<<(std::ostream& os, const uint8_t& u8)
 {
@@ -168,16 +158,6 @@ inline std::ostream& operator<<(std::ostream& os, const uint8_t& u8)
 inline std::ostream& operator<<(std::ostream& os, const Data12&)
 {
     os << " data12 ";
-    return os;
-}
-inline std::ostream& operator<<(std::ostream& os, const Data14&)
-{
-    os << " data14 ";
-    return os;
-}
-inline std::ostream& operator<<(std::ostream& os, const Data15&)
-{
-    os << " data15 ";
     return os;
 }
 

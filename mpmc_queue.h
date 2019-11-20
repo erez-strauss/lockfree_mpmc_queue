@@ -113,6 +113,7 @@ public:
     using value_type = DataT;
     using index_type = IndexT;
 
+    static_assert(std::is_trivial<value_type>::value, "mpmc_queue requires trivial value_type");
     static_assert(sizeof(index_type) >= 4,
                   "index type should be 4 bytes or wider, one and two bytes index are for experiments only");
     static_assert(std::is_unsigned_v<index_type>, "index_type type must be unsigned");

@@ -3,16 +3,16 @@ BDIR:=./build
 
 VPATH := src:.
 
-GTEST_INCLUDEDIR := $(shell if [[ -d /usr/include/gtest ]]; then echo /usr/include ; fi )
-GTEST_LIBDIR := $(shell if [[ -f /usr/lib64/libgtest.so ]]; then echo /usr/lib64 ; fi )
+GTEST_INCLUDEDIR := $(shell if [ -d /usr/include/gtest ]; then echo /usr/include ; fi )
+GTEST_LIBDIR := $(shell if [ -f /usr/lib64/libgtest.so ]; then echo /usr/lib64 ; fi )
 
-TARGETS:= $(BDIR)/shared_q_test $(BDIR)/q_bandwidth
+TARGETS:= $(BDIR)/shared_q_test $(BDIR)/q_bandwidth $(BDIR)/example1  $(BDIR)/example2 
 
 ifneq ($(GTEST_INCLUDEDIR),)
 	TARGETS += $(BDIR)/gtest_mpmc
 endif
 
-ISBOOSTAVAILABLE:=$(shell if [[ -f /usr/include/boost/lockfree/queue.hpp ]] ; then echo 1 ; else echo 0 ; fi)
+ISBOOSTAVAILABLE:=$(shell if [ -f /usr/include/boost/lockfree/queue.hpp ] ; then echo 1 ; else echo 0 ; fi)
 
 #CXX:=g++
 CXX:=clang++

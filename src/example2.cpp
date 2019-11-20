@@ -29,23 +29,30 @@
 
 #include <iostream>
 #include <thread>
+#include <vector>
 
 int main()
 {
-    constexpr unsigned N{100};
-    es::lockfree::mpmc_queue<unsigned, 32> q{};
-    unsigned prod_sum{0};
-    unsigned cons_sum{0};
+    es::lockfree::mpmc_queue<unsigned> q{32};
 
-    std::thread prod{[&]() {
+    constexpr unsigned N{1000000};
+    constexpr unsigned P{2};
+    std::atomic<uint64_t> prod_sum{0};
+    std::atomic<uint64_t> cons_sum{0};
+
+    auto producer = [&]() {
         for (unsigned x = 0; x < N; ++x)
         {
             while (!q.push(x))
                 ;
             prod_sum += x;
         }
-    }};
-    std::thread cons{[&]() {
+    };
+    std::vector<std::thread> producers;
+    producers.resize(P);
+    for (auto& p : producers) p = std::thread{producer};
+
+    auto consumer = [&]() {
         unsigned v{0};
         for (unsigned x = 0; x < N; ++x)
         {
@@ -53,9 +60,13 @@ int main()
                 ;
             cons_sum += v;
         }
-    }};
-    prod.join();
-    cons.join();
+    };
+    std::vector<std::thread> consumers;
+    consumers.resize(P);
+    for (auto& c : consumers) c = std::thread{consumer};
+
+    for (auto& p : producers) p.join();
+    for (auto& c : consumers) c.join();
     std::cout << (cons_sum && cons_sum == prod_sum ? "OK" : "ERROR") << " " << cons_sum << '\n';
 
     return 0;

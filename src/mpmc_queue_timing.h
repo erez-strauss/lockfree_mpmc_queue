@@ -211,7 +211,8 @@ void QBandwidth<Q>::run(const std::string& name)
                                      ;
                                  while (_state == 1)
                                  {
-                                     if (_q.push(counter)) counter++;
+                                     typename Q::value_type d = counter;
+                                     if (_q.push(d)) counter++;
                                  }
                                  _push_counter[writer_id] = counter;
                                  // std::cout << "producer[" << writer_id << "]: ended\n";

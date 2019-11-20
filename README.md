@@ -18,6 +18,8 @@ http://github.com/erez-strauss/lockfree_mpmc_queue/
 ## Design:
 
 * fixed size array of entries, array size must be power of 2
+* the _array entry content is accessed and updated using atomic operation
+* maximum size of entry is 16 bytes, in order to guarantee atomic compare and exchange
 * each entry is in a separate cacheline - prevents producers and consumers contention.
 * _array entries contain sequence number and the user data
 * all change operations are done using compare_exchange, both for entries and indexes
@@ -41,15 +43,18 @@ http://github.com/erez-strauss/lockfree_mpmc_queue/
 
 ## Usage:
 
-The es::lockfree::mpmc_queue<DataT, size_t N, IndexT=uint32_t, bool lazy_push=false, bool lazy_pop=false>
- template arguments:
-* DataT is the data items type - value_type, should be trivial types
-     The total size of the Data_t plus the size of the Index_t should be 16 bytes or less,
+
+```
+es::lockfree::mpmc_queue<DataT, size_t N, IndexT=uint32_t, bool lazy_push=false, bool lazy_pop=false> queue;
+```
+ template parameters:
+* *DataT* is the data items type - value_type, should be trivial type
+     The total size of the DataT plus the size of the IndexT should be 16 bytes or less,
      as the queue operations use atomic compare and exchange on the _array entries.
-* N is the compile time size of the queue, if provided as zero 0, the size is set at the call
-     to the constructor. these sizes must be power of 2, of 2 or larger.
-* IndexT - the index type, must be unsigned, with range of four times larger than the size of the queue
-* lazy parameters - as push and pop operation are successful upon the transaction on the _array[] entry,
+* *N* is the compile time size of the queue, if provided as zero 0, the size is set at the call
+     to the constructor. The queue size must be power of 2, 1 is valid as 2 to the power of 0.
+* *IndexT* - the index type, must be unsigned, with range of four times larger than the size of the queue
+* *lazy parameters* - as push and pop operation are successful upon the transaction on the _array[] entry,
      the second operation of increasing the _write_index or _read_index, respectively can be attempted
      immediately (none lazy) or later on (lazy). The best performance should be determined by experimentation.
 
@@ -69,43 +74,55 @@ The es::lockfree::mpmc_queue<DataT, size_t N, IndexT=uint32_t, bool lazy_push=fa
 * consume(function) -- consume repeatably the element in the queue, stops when queue is empty or the function returned true to terminate, returns number of elments that were consumed
 
 ## Example
+
+Two producers, each producer places N integers into the queue, two consumers, each consumer consumes N numbers from the queue.
+
 ```cpp
 #include <mpmc_queue.h>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 int main()
 {
-    constexpr unsigned N{100};
-    es::lockfree::mpmc_queue<unsigned, 32> q{};
-    unsigned prod_sum{0};
-    unsigned cons_sum{0};
+    es::lockfree::mpmc_queue<unsigned> q{32};
 
-    std::thread prod{[&]() {
-        for (unsigned x = 0; x < N; ++x)
-        {
+    constexpr unsigned N{1000000};
+    constexpr unsigned P{2};
+    std::atomic<uint64_t> prod_sum{0};
+    std::atomic<uint64_t> cons_sum{0};
+
+    auto producer = [&]() {
+        for (unsigned x = 0; x < N; ++x) {
             while (!q.push(x))
                 ;
             prod_sum += x;
         }
-    }};
-    std::thread cons{[&]() {
+    };
+    std::vector<std::thread> producers;
+    producers.resize(P);
+    for (auto& p : producers) p = std::thread{producer};
+
+    auto consumer = [&]() {
         unsigned v{0};
-        for (unsigned x = 0; x < N; ++x)
-        {
+        for (unsigned x = 0; x < N; ++x) {
             while (!q.pop(v))
                 ;
             cons_sum += v;
         }
-    }};
-    prod.join();
-    cons.join();
+    };
+    std::vector<std::thread> consumers;
+    consumers.resize(P);
+    for (auto& c : consumers) c = std::thread{consumer};
+
+    for (auto& p : producers) p.join();
+    for (auto& c : consumers) c.join();
     std::cout << (cons_sum && cons_sum == prod_sum ? "OK" : "ERROR") << " " << cons_sum << '\n';
     return 0;
 }
 ```
 
-you can try the example using: make build/example1
+you can try the example using: make build/example2
 
 ## Implementation
 
@@ -134,8 +151,11 @@ odd value for entry with data.
 * push_keep_n() - push an element, and drop the oldest element from the queue if failed to push and push again. always return true;
 * capacity() - returns the capacity of the queue
 * size() - returns number of elements in the queue, its value is not guarenteed, as push/pop might be lazy to increment their respective indexes.
+* enqueue() / dequeue() - convenience methods call push()/pop() respectively.
 
-
+### Performance
+The bandwidth performance, measured using the src/q_bandwidth.cpp shows that this
+queue is faster by two or three times than boost::lockless::queue on some of the runs.
 
 ### Implementations Details
 
@@ -213,6 +233,7 @@ make report
 
 ## Next steps
 
+* performance report summary
 * Collecting performance reports from different machines, platforms.
 * You can run, test and send me performance report files
 
