@@ -79,9 +79,10 @@ class array_inplace
 public:
     explicit array_inplace(size_t = N) noexcept : _data() {}
     ~array_inplace() noexcept = default;
-    T& operator[](size_t index) noexcept { return _data[index]; }
-    const T& operator[](size_t index) const noexcept { return _data[index]; }
+    T& operator[](size_t index) noexcept { return _data[index & (N - 1)]; }
+    const T& operator[](size_t index) const noexcept { return _data[index & (N - 1)]; }
     [[nodiscard]] constexpr size_t size() const noexcept { return N; }
+    [[nodiscard]] constexpr size_t index_mask() const noexcept { return N - 1; }
     [[nodiscard]] constexpr size_t capacity() const noexcept { return N; }
 };
 
@@ -89,20 +90,22 @@ template<typename T, unsigned N>
 class array_runtime
 {
     std::unique_ptr<T[]> _p;
-    size_t _n;
+    const size_t _n;
+    const size_t _index_mask;
     static_assert(N == 0, "dynamic, run time array requires N to be zero");
 
 public:
-    explicit array_runtime(size_t n = 0) : _p(nullptr), _n(n)
+    explicit array_runtime(size_t n = 0) : _p(nullptr), _n(n), _index_mask(n - 1)
     {
         if (_n > 0) _p = std::unique_ptr<T[]>{new T[n]};
     }
 
     ~array_runtime() noexcept = default;
 
-    T& operator[](size_t index) noexcept { return _p[index]; }
-    const T& operator[](size_t index) const noexcept { return _p[index]; }
+    T& operator[](size_t index) noexcept { return _p[index & _index_mask]; }
+    const T& operator[](size_t index) const noexcept { return _p[index & _index_mask]; }
     [[nodiscard]] size_t size() const noexcept { return _n; }
+    [[nodiscard]] size_t index_mask() const noexcept { return _index_mask; }
     [[nodiscard]] size_t capacity() const noexcept { return _n; }
 };
 
@@ -256,7 +259,7 @@ private:
                                               array_inplace<aligned_type<entry, 2 * cachelinesize>, N>>::type;
 
 public:
-    explicit mpmc_queue(uint64_t n = N) : _write_index(0), _read_index(0), _size(n), _index_mask(n - 1), _array(n)
+    explicit mpmc_queue(uint64_t n = N) : _write_index(0), _read_index(0), _array(n)
     {
         if constexpr (N > 0)
         {
@@ -271,7 +274,7 @@ public:
                                             std::to_string(n)});
         }
 
-        for (index_type i = 0; i < _size; ++i) _array[i].set_seq(i << 1);
+        for (index_type i = 0; i < _array.size(); ++i) _array[i].set_seq(i << 1);
     }
 
     ~mpmc_queue()
@@ -294,14 +297,14 @@ public:
 
         while (true)
         {
-            index_type seq = _array[wr_index & _index_mask].get_seq();
+            index_type seq = _array[wr_index].get_seq();
 
             if (seq == static_cast<index_type>(wr_index << 1))
             {
                 entry e{static_cast<index_type>(wr_index << 1)};
                 entry data_entry{static_cast<index_type>((wr_index << 1) | 1U), d};
 
-                if (_array[wr_index & _index_mask].compare_exchange(e, data_entry))
+                if (_array[wr_index].compare_exchange(e, data_entry))
                 {
                     if constexpr (!lazy_push)
                     {
@@ -311,11 +314,12 @@ public:
                 }
             }
             else if ((seq == static_cast<index_type>((wr_index << 1) | 1U)) ||
-                     (static_cast<index_type>(seq) == static_cast<index_type>((wr_index + _size) << 1)))
+                     (static_cast<index_type>(seq) == static_cast<index_type>((wr_index + _array.size()) << 1)))
             {
                 _write_index.compare_exchange_strong(wr_index, wr_index + 1);
             }
-            else if (static_cast<index_type>(seq + (_size << 1)) == static_cast<index_type>((wr_index << 1) | 1U))
+            else if (static_cast<index_type>(seq + (_array.size() << 1)) ==
+                     static_cast<index_type>((wr_index << 1) | 1U))
             {
                 return false;
             }
@@ -332,12 +336,12 @@ public:
 
         while (true)
         {
-            entry e{_array[rd_index & _index_mask].load()};
+            entry e{_array[rd_index].load()};
             if (e.get_seq() == static_cast<index_type>((rd_index << 1) | 1U))
             {
-                entry empty_entry{static_cast<index_type>((rd_index + _size) << 1U)};
+                entry empty_entry{static_cast<index_type>((rd_index + _array.size()) << 1U)};
 
-                if (_array[rd_index & _index_mask].compare_exchange(e, empty_entry))
+                if (_array[rd_index].compare_exchange(e, empty_entry))
                 {
                     d = e.get_data();
                     if constexpr (!lazy_pop)
@@ -350,7 +354,7 @@ public:
                 }
             }
             else if (static_cast<index_type>(e.get_seq() | 1U) ==
-                     static_cast<index_type>(((rd_index + _size) << 1) | 1U))
+                     static_cast<index_type>(((rd_index + _array.size()) << 1) | 1U))
             {
                 index_type tmp_index = rd_index;
                 ++rd_index;
@@ -372,14 +376,14 @@ public:
 
         while (true)
         {
-            index_type seq = _array[wr_index & _index_mask].get_seq();
+            index_type seq = _array[wr_index].get_seq();
 
             if (seq == static_cast<index_type>(wr_index << 1))
             {
                 entry e{static_cast<index_type>(wr_index << 1)};
                 entry data_entry{static_cast<index_type>((wr_index << 1) | 1U), d};
 
-                if (_array[wr_index & _index_mask].compare_exchange(e, data_entry))
+                if (_array[wr_index].compare_exchange(e, data_entry))
                 {
                     i = wr_index;
                     if constexpr (!lazy_push)
@@ -390,11 +394,12 @@ public:
                 }
             }
             else if ((seq == static_cast<index_type>((wr_index << 1) | 1U)) ||
-                     (static_cast<index_type>(seq) == static_cast<index_type>((wr_index + _size) << 1)))
+                     (static_cast<index_type>(seq) == static_cast<index_type>((wr_index + _array.size()) << 1)))
             {
                 _write_index.compare_exchange_strong(wr_index, wr_index + 1);
             }
-            else if (static_cast<index_type>(seq + (_size << 1)) == static_cast<index_type>((wr_index << 1) | 1U))
+            else if (static_cast<index_type>(seq + (_array.size() << 1)) ==
+                     static_cast<index_type>((wr_index << 1) | 1U))
             {
                 return false;
             }
@@ -411,12 +416,12 @@ public:
 
         while (true)
         {
-            entry e{_array[rd_index & _index_mask].load()};
+            entry e{_array[rd_index].load()};
             if (e.get_seq() == static_cast<index_type>((rd_index << 1) | 1U))
             {
-                entry empty_entry{static_cast<index_type>((rd_index + _size) << 1U)};
+                entry empty_entry{static_cast<index_type>((rd_index + _array.size()) << 1U)};
 
-                if (_array[rd_index & _index_mask].compare_exchange(e, empty_entry))
+                if (_array[rd_index].compare_exchange(e, empty_entry))
                 {
                     d = e.get_data();
                     i = rd_index;
@@ -430,7 +435,7 @@ public:
                 }
             }
             else if (static_cast<index_type>(e.get_seq() | 1U) ==
-                     static_cast<index_type>(((rd_index + _size) << 1) | 1U))
+                     static_cast<index_type>(((rd_index + _array.size()) << 1) | 1U))
             {
                 index_type tmp_index = rd_index;
                 ++rd_index;
@@ -470,7 +475,7 @@ public:
 
         while (true)
         {
-            entry e{_array[rd_index & _index_mask].load()};
+            entry e{_array[rd_index].load()};
 
             if (e.get_seq() == static_cast<index_type>(rd_index << 1))
             {
@@ -482,7 +487,7 @@ public:
                 d = e.get_data();
                 return true;
             }
-            if (static_cast<index_type>(e.get_seq() >> 1) == static_cast<index_type>(rd_index + _size))
+            if (static_cast<index_type>(e.get_seq() >> 1) == static_cast<index_type>(rd_index + _array.size()))
             {
                 _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
@@ -497,7 +502,7 @@ public:
 
         while (true)
         {
-            entry e{_array[rd_index & _index_mask].load()};
+            entry e{_array[rd_index].load()};
 
             if (e.get_seq() == static_cast<index_type>(rd_index << 1))
             {
@@ -510,7 +515,7 @@ public:
                 i = e.get_seq();
                 return true;
             }
-            if (static_cast<index_type>(e.get_seq() >> 1) == static_cast<index_type>(rd_index + _size))
+            if (static_cast<index_type>(e.get_seq() >> 1) == static_cast<index_type>(rd_index + _array.size()))
             {
                 _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
@@ -526,7 +531,7 @@ public:
 
         while (true)
         {
-            entry e{_array[rd_index & _index_mask].load()};
+            entry e{_array[rd_index].load()};
 
             if (e.get_seq() == static_cast<index_type>(rd_index << 1))
             {
@@ -537,9 +542,9 @@ public:
             {
                 if (!f(e.get_data(), e.get_seq())) return false;
 
-                entry empty_entry{static_cast<index_type>((rd_index + _size) << 1)};
+                entry empty_entry{static_cast<index_type>((rd_index + _array.size()) << 1)};
 
-                if (_array[rd_index & _index_mask].compare_exchange(e, empty_entry))
+                if (_array[rd_index].compare_exchange(e, empty_entry))
                 {
                     d = e.get_data();
                     if constexpr (!lazy_pop)
@@ -550,7 +555,7 @@ public:
                     return true;
                 }
             }
-            else if (static_cast<index_type>(e.get_seq() >> 1) == static_cast<index_type>(rd_index + _size))
+            else if (static_cast<index_type>(e.get_seq() >> 1) == static_cast<index_type>(rd_index + _array.size()))
             {
                 _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
@@ -576,7 +581,7 @@ public:
     [[using gnu: hot, flatten]] bool empty() noexcept
     {
         index_type rd_index = _read_index.load();
-        entry e{_array[rd_index & _index_mask].load()};
+        entry e{_array[rd_index].load()};
 
         if (e.get_seq() == static_cast<index_type>(rd_index << 1)) return true;
         return false;
@@ -584,7 +589,7 @@ public:
     [[using gnu: hot, flatten]] [[nodiscard]] bool empty() const noexcept
     {
         index_type rd_index = _read_index.load();
-        entry e{_array[rd_index & _index_mask].load()};
+        entry e{_array[rd_index].load()};
 
         if (e.get_seq() == static_cast<index_type>(rd_index << 1)) return true;
         return false;
@@ -594,10 +599,10 @@ public:
     {
         if (empty()) return 0;
         if (_write_index >= _read_index) return _write_index - _read_index;
-        return _write_index + _size - _read_index;
+        return _write_index + _array.size() - _read_index;
     }
 
-    [[nodiscard]] size_t capacity() const noexcept { return _size; }
+    [[nodiscard]] size_t capacity() const noexcept { return _array.size(); }
 
     constexpr size_t entry_size() const noexcept { return sizeof(entry); }
     static constexpr size_t size_n() { return N; }
@@ -609,8 +614,6 @@ public:
 private:
     std::atomic<index_type> _write_index alignas(2 * cachelinesize);
     std::atomic<index_type> _read_index alignas(2 * cachelinesize);
-    const index_type _size alignas(cachelinesize){N};
-    const index_type _index_mask alignas(cachelinesize){0};
     array_t _array;
 };
 
@@ -627,40 +630,40 @@ inline std::ostream& mpmc_queue<DataT, N, IndexT, lazy_push, lazy_pop>::dump_sta
         entry e(static_cast<entry_as_value>(_array[eindex].load()));
         uint64_t seq_index = (e.get_seq() >> 1);
 
-        eos << "  e[" << std::setw(3) << eindex << "]:\t " << seq_index /* (uint64_t)e.get_seq() */ << "\t "
-            << ((uint64_t)(e.get_seq() >> 1) / _size) << '_' << ((uint64_t)(e.get_seq() >> 1) % _size) << "\t"
-            << ((e.get_seq() & 0x01) ? "Full " : "Empty") << " d: " << e.get_data();
+        eos << "  e[" << std::setw(3) << eindex << "]:\t " << seq_index << "\t "
+            << ((uint64_t)(e.get_seq() >> 1) / _array.size()) << '_' << ((uint64_t)(e.get_seq() >> 1) % _array.size())
+            << "\t" << ((e.get_seq() & 0x01) ? "Full " : "Empty") << " d: " << e.get_data();
         return eos;
     };
     unsigned data_entries_count{0};
-    for (unsigned i = 0; i < _size; ++i)
+    for (unsigned i = 0; i < _array.size(); ++i)
     {
         entry& e{_array[i]};
         data_entries_count += (e.get_seq() & 1);
     }
     index_type ewr_index = _write_index.load() & ~(1UL << (bits_in_index() - 1));
     index_type erd_index = _read_index.load() & ~(1UL << (bits_in_index() - 1));
-    index_type indexdiff = (ewr_index >= erd_index) ? (ewr_index - erd_index) : (ewr_index + _size - erd_index);
+    index_type indexdiff = (ewr_index >= erd_index) ? (ewr_index - erd_index) : (ewr_index + _array.size() - erd_index);
     // clang-format off
     os << "mpmc_queue Queue dump:"
        << "\n Q is_always_lock_free: " << (is_always_lock_free ? "true" : "false")
-       << "\n Q Capacity: " << (uint64_t)_size << (N==0?" runtime":" compile time")
+       << "\n Q Capacity: " << (uint64_t)_array.size() << (N==0?" runtime":" compile time")
        << "\n Q Size: " << size()
        << "\n Q lazy push: " << (is_lazy_push()?"true":"false")
        << "\n Q lazy pop: " << (is_lazy_pop()?"true":"false")
        << "\n Q sizeof(*this): " << sizeof(*this)
        << "\n Q Entries with data: " << data_entries_count
        << "\n Q entry size: " << entry_size()
-       << "\n Q index_mask: 0x" << std::hex << (uint64_t)_index_mask << std::dec
-       << "\n Q effective write index: " << (uint64_t)ewr_index << " " << (ewr_index/_size) << '_' << ( ewr_index%_size)
-       << "\n Q effective read index: " << (uint64_t)erd_index << " " << (erd_index/_size) << '_' << (erd_index%_size)
-       << "\n Q write index: " << (uint64_t)_write_index << " " << (_write_index / _size) << '_' << (_write_index % _size) << "  -->";
-    show_entry(os, (unsigned)(_write_index&_index_mask))
-       << "\n Q read index: " << (uint64_t)_read_index << " " << (_read_index / _size) << '_' << (_read_index % _size) << "  -->";
-    show_entry(os, (unsigned)(_read_index&_index_mask))
+       << "\n Q index_mask: 0x" << std::hex << (uint64_t)(_array.size() - 1) << std::dec
+       << "\n Q effective write index: " << (uint64_t)ewr_index << " " << (ewr_index/_array.size()) << '_' << ( ewr_index%_array.size())
+       << "\n Q effective read index: " << (uint64_t)erd_index << " " << (erd_index/_array.size()) << '_' << (erd_index%_array.size())
+       << "\n Q write index: " << (uint64_t)_write_index << " " << (_write_index / _array.size()) << '_' << (_write_index % _array.size()) << "  -->";
+    show_entry(os, (unsigned)(_write_index&_array.index_mask()))
+      << "\n Q read index: " << (uint64_t)_read_index << " " << (_read_index / _array.size()) << '_' << (_read_index % _array.size()) << "  -->";
+    show_entry(os, (unsigned)(_read_index&_array.index_mask()))
        << "\n Q write-read indexes: " << (unsigned long) indexdiff << '\n';
     // clang-format on
-    for (unsigned i = 0; i < _size; ++i)
+    for (unsigned i = 0; i < _array.size(); ++i)
     {
         entry e(static_cast<entry_as_value>(_array[i].load()));
         show_entry(os, i) << '\n';
