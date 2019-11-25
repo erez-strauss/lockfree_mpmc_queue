@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.ii
 
 # Precompiled Headers
 *.gch
@@ -30,3 +31,6 @@
 *.exe
 *.out
 *.app
+
+build
+cbuild

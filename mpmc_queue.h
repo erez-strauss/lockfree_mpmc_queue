@@ -40,28 +40,16 @@ namespace es::lockfree {
 __extension__ using uint128_t = unsigned __int128;
 
 template<size_t S>
-struct unit_value
-{
-};
-template<>
-struct unit_value<2>
-{
-    using unit_type = uint16_t;
-};
-template<>
-struct unit_value<4>
-{
-    using unit_type = uint32_t;
-};
+struct unit_value;
 template<>
 struct unit_value<8>
 {
-    using unit_type = uint64_t;
+    using type = uint64_t;
 };
 template<>
 struct unit_value<16>
 {
-    using unit_type = uint128_t;
+    using type = uint128_t;
 };
 
 template<typename T, unsigned A>
@@ -159,7 +147,7 @@ private:
         value_type _d;
         index_type _i;
     };
-    using entry_as_value = typename unit_value<sizeof(helper_entry)>::unit_type;
+    using entry_as_value = typename unit_value<sizeof(helper_entry)>::type;
 
     constexpr static inline bool is_always_lock_free = std::atomic<entry_as_value>::is_always_lock_free;
 
@@ -604,8 +592,8 @@ public:
 
     [[nodiscard]] size_t capacity() const noexcept { return _array.size(); }
 
-    constexpr size_t entry_size() const noexcept { return sizeof(entry); }
-    static constexpr size_t size_n() { return N; }
+    [[nodiscard]] constexpr size_t entry_size() const noexcept { return sizeof(entry); }
+    [[nodiscard]] static constexpr size_t size_n() { return N; }
 
     [[using gnu: used]] std::ostream& dump_state(std::ostream& os) noexcept;
 
