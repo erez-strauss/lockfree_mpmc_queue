@@ -39,6 +39,8 @@ namespace es::lockfree {
 
 __extension__ using uint128_t = unsigned __int128;
 
+inline static constexpr size_t cachelinesize{64};
+
 template<size_t S>
 struct unit_value;
 template<>
@@ -77,7 +79,7 @@ public:
 template<typename T, unsigned N>
 class array_runtime
 {
-    std::unique_ptr<T[]> _p;
+    std::unique_ptr<T[]> _p alignas(2 * cachelinesize);
     const size_t _n;
     const size_t _index_mask;
     static_assert(N == 0, "dynamic, run time array requires N to be zero");
@@ -240,8 +242,6 @@ private:
                   "entry size not supported");
     static_assert(sizeof(entry) == sizeof(helper_entry), "entry and helper_entry are not of the same size");
     static_assert(sizeof(entry) == sizeof(entry_as_value), "entry and entry_as_value are not of the same size");
-
-    inline static constexpr size_t cachelinesize{64};
 
     using array_t = typename std::conditional<N == 0, array_runtime<aligned_type<entry, 2 * cachelinesize>, 0>,
                                               array_inplace<aligned_type<entry, 2 * cachelinesize>, N>>::type;
