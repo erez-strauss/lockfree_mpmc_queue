@@ -224,6 +224,41 @@ To generate performance report, including boost queue for comparison:
 make report
 ```
 
+## Benchmarks
+
+Use the 'make report' to run the q_bandwidth.cpp, it will generate performance report.
+the performance report can be processed to generate the summary below per data size.
+
+The benchmark tests the four different favors of the mpmc_queue<> which are differ with regardi
+to the incrementing the write and read indexes. 
+
+Here are results from laptop, hyper-threading is on.
+
+```
+$ ./scripts/report-processing.pl reports/q-bw-report.20191126-235824.txt
+report for data size: 4
+fastest 1-to-1:  data_sz: 4 index_sz: 4 queue_name: mpmc_queue<ff> capacity: 64 bandwidth: 49,415,117
+fastest 2-to-2:  data_sz: 4 index_sz: 4 queue_name: mpmc_queue<ff> capacity: 64 bandwidth: 12,147,207 (24.58)
+fastest 1-to-2:  data_sz: 4 index_sz: 4 queue_name: mpmc_queue<tf> capacity: 64 bandwidth: 14,316,094 (28.97)
+fastest 2-to-1:  data_sz: 4 index_sz: 4 queue_name: mpmc_queue<ft> capacity: 64 bandwidth: 14,071,685 (28.48)
+boostq  1-to-1:  data_sz: 4 index_sz: - queue_name: boost:lf:queue capacity: 64 bandwidth: 6,074,995 (12.29)
+boostq  2-to-2:  data_sz: 4 index_sz: - queue_name: boost:lf:queue capacity: 64 bandwidth: 5,328,217 (10.78)
+report for data size: 8
+fastest 1-to-1:  data_sz: 8 index_sz: 8 queue_name: mpmc_queue<tf> capacity: 64 bandwidth: 27,853,442
+fastest 2-to-2:  data_sz: 8 index_sz: 8 queue_name: mpmc_queue<tf> capacity: 64 bandwidth: 9,294,286 (33.37)
+fastest 1-to-2:  data_sz: 8 index_sz: 8 queue_name: mpmc_queue<tf> capacity: 8 bandwidth: 11,121,625 (39.93)
+fastest 2-to-1:  data_sz: 8 index_sz: 8 queue_name: mpmc_queue<ft> capacity: 8 bandwidth: 13,297,038 (47.74)
+boostq  1-to-1:  data_sz: 8 index_sz: - queue_name: boost:lf:queue capacity: 2 bandwidth: 5,802,189 (20.83)
+boostq  2-to-2:  data_sz: 8 index_sz: - queue_name: boost:lf:queue capacity: 64 bandwidth: 5,179,598 (18.60)
+report for data size: 12
+fastest 1-to-1:  data_sz: 12 index_sz: 4 queue_name: mpmc_queue<tf> capacity: 64 bandwidth: 28,228,040
+fastest 2-to-2:  data_sz: 12 index_sz: 4 queue_name: mpmc_queue<tf> capacity: 8 bandwidth: 9,419,344 (33.37)
+fastest 1-to-2:  data_sz: 12 index_sz: 4 queue_name: mpmc_queue<tf> capacity: 64 bandwidth: 11,157,596 (39.53)
+fastest 2-to-1:  data_sz: 12 index_sz: 4 queue_name: mpmc_queue<ft> capacity: 8 bandwidth: 13,770,559 (48.78)
+boostq  1-to-1:  data_sz: 12 index_sz: - queue_name: boost:lf:queue capacity: 64 bandwidth: 6,110,304 (21.65)
+boostq  2-to-2:  data_sz: 12 index_sz: - queue_name: boost:lf:queue capacity: 64 bandwidth: 5,336,504 (18.90)
+
+```
 
 ## Future Optimizations
 
