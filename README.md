@@ -155,7 +155,7 @@ odd value for entry with data.
 
 ### Performance
 The bandwidth performance, measured using the src/q_bandwidth.cpp shows that this
-queue is faster by two or three times than boost::lockless::queue on some of the runs.
+queue is faster by two or three times than boost::lockfree::queue on some of the runs.
 
 ### Implementations Details
 
