@@ -89,7 +89,7 @@ hash_signature& hash_signature::add(std::string_view sv)
     }
     union
     {
-        value_type _value;
+        value_type    _value;
         unsigned char _buffer[sizeof(value_type)];
     };
     while (sv.size() > 0)

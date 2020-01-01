@@ -49,7 +49,7 @@ inline uint64_t tsc_per_milli(bool force = false)
     if (tsc_in_milli && !force) return tsc_in_milli;
 
     uint64_t ccstart0, ccstart1, ccend0, ccend1;
-    timeval todstart{}, todend{};
+    timeval  todstart{}, todend{};
 
     ccstart0 = rdtsc();
     gettimeofday(&todstart, nullptr);
@@ -93,21 +93,21 @@ public:
     Q& _q;
 
 private:
-    unsigned _q_depth{0};
-    std::vector<std::thread> _producers;
-    std::vector<std::thread> _consumers;
+    unsigned                           _q_depth{0};
+    std::vector<std::thread>           _producers;
+    std::vector<std::thread>           _consumers;
     std::vector<std::atomic<uint64_t>> _from{};
     std::vector<std::atomic<uint64_t>> _to{};
     std::vector<std::atomic<uint64_t>> _pop_count{};
-    unsigned long _max_count{0};
-    std::atomic<unsigned> _producers_counter{0};
+    unsigned long                      _max_count{0};
+    std::atomic<unsigned>              _producers_counter{0};
 };
 
 template<typename Q>
 void QTiming<Q>::run()
 {
     auto tsc_start = rdtsc();
-    auto tsc_end = rdtsc();
+    auto tsc_end   = rdtsc();
 
     std::cout << "tsc diff: " << (tsc_end - tsc_start) << " tsc per milli sec: " << tsc_per_milli() << '\n';
 
@@ -129,13 +129,13 @@ void QTiming<Q>::run()
         uint64_t* diffs = new uint64_t[_q_depth + 1];
 
         typename Q::value_type stsc{1};
-        unsigned n{0};
+        unsigned               n{0};
         while (stsc != 0)
         {
             if (_q.pop(stsc))
             {
                 volatile uint64_t tsc = rdtsc();
-                diffs[n++] = tsc - stsc;
+                diffs[n++]            = tsc - stsc;
             }
         }
         for (unsigned i = 0; i < _q_depth; ++i)
@@ -182,14 +182,14 @@ public:
     Q& _q;
 
 private:
-    std::vector<std::thread> _producers;
-    std::vector<std::thread> _consumers;
+    std::vector<std::thread>           _producers;
+    std::vector<std::thread>           _consumers;
     std::vector<std::atomic<uint64_t>> _push_counter{};
     std::vector<std::atomic<uint64_t>> _pop_counter{};
-    unsigned long _milli_sec_run{0};
-    volatile std::atomic<unsigned> _producers_counter{0};
-    volatile std::atomic<unsigned> _consumers_counter{0};
-    std::atomic<unsigned> _state{0};
+    unsigned long                      _milli_sec_run{0};
+    volatile std::atomic<unsigned>     _producers_counter{0};
+    volatile std::atomic<unsigned>     _consumers_counter{0};
+    std::atomic<unsigned>              _state{0};
 };
 
 template<typename Q>
@@ -199,7 +199,7 @@ void QBandwidth<Q>::run(const std::string& name)
     for (auto& x : _pop_counter) x = 0;
     _consumers_counter = 0;
     _producers_counter = 0;
-    _state = 0;
+    _state             = 0;
 
     for (auto& writer : _producers)
     {
@@ -226,7 +226,7 @@ void QBandwidth<Q>::run(const std::string& name)
         reader = std::thread{[&](unsigned reader_id) {
                                  // std::cout << "consumer[" << reader_id << "]: started\n";
 
-                                 uint64_t counter{0};
+                                 uint64_t               counter{0};
                                  typename Q::value_type d{0};
                                  ++_consumers_counter;
                                  while (_state < 1)
@@ -252,7 +252,7 @@ void QBandwidth<Q>::run(const std::string& name)
         ;
     // std::cout << "sleeping for " << _milli_sec_run << " milliseconds\n";
     auto run_start = rdtsc();
-    _state = 1;
+    _state         = 1;
     usleep(1000 * _milli_sec_run);
     _state = 2;
 
@@ -267,7 +267,7 @@ void QBandwidth<Q>::run(const std::string& name)
         }
     }
 
-    _state = 4;
+    _state       = 4;
     wait_tsc_end = rdtsc() + 1000 * tsc_per_milli();
     while (_consumers_counter > 0)
     {

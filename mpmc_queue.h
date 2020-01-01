@@ -69,8 +69,8 @@ class array_inplace
 public:
     explicit array_inplace(size_t = N) noexcept : _data() {}
     ~array_inplace() noexcept = default;
-    T& operator[](size_t index) noexcept { return _data[index & (N - 1)]; }
-    const T& operator[](size_t index) const noexcept { return _data[index & (N - 1)]; }
+    T&                             operator[](size_t index) noexcept { return _data[index & (N - 1)]; }
+    const T&                       operator[](size_t index) const noexcept { return _data[index & (N - 1)]; }
     [[nodiscard]] constexpr size_t size() const noexcept { return N; }
     [[nodiscard]] constexpr size_t index_mask() const noexcept { return N - 1; }
     [[nodiscard]] constexpr size_t capacity() const noexcept { return N; }
@@ -80,8 +80,8 @@ template<typename T, unsigned N>
 class array_runtime
 {
     std::unique_ptr<T[]> _p alignas(2 * cachelinesize);
-    const size_t _n;
-    const size_t _index_mask;
+    const size_t         _n;
+    const size_t         _index_mask;
     static_assert(N == 0, "dynamic, run time array requires N to be zero");
 
 public:
@@ -92,8 +92,8 @@ public:
 
     ~array_runtime() noexcept = default;
 
-    T& operator[](size_t index) noexcept { return _p[index & _index_mask]; }
-    const T& operator[](size_t index) const noexcept { return _p[index & _index_mask]; }
+    T&                   operator[](size_t index) noexcept { return _p[index & _index_mask]; }
+    const T&             operator[](size_t index) const noexcept { return _p[index & _index_mask]; }
     [[nodiscard]] size_t size() const noexcept { return _n; }
     [[nodiscard]] size_t index_mask() const noexcept { return _index_mask; }
     [[nodiscard]] size_t capacity() const noexcept { return _n; }
@@ -114,10 +114,10 @@ public:
                       sizeof(index_type) == 8,
                   "index_type size must be one of: 1 2 4 8");
 
-    static constexpr size_t get_data_size() { return sizeof(value_type); }
-    static constexpr size_t get_index_size() { return sizeof(index_type); }
-    static constexpr bool is_lazy_push() { return lazy_push; }
-    static constexpr bool is_lazy_pop() { return lazy_pop; }
+    static constexpr size_t   get_data_size() { return sizeof(value_type); }
+    static constexpr size_t   get_index_size() { return sizeof(index_type); }
+    static constexpr bool     is_lazy_push() { return lazy_push; }
+    static constexpr bool     is_lazy_pop() { return lazy_pop; }
     static constexpr unsigned bits_in_index() { return sizeof(index_type) * CHAR_BIT; }
     static constexpr unsigned bits_for_value(unsigned n)
     {
@@ -177,7 +177,7 @@ private:
         {
             clear();
             _u._x._data = d;
-            _u._x._seq = s;
+            _u._x._seq  = s;
         }
         explicit entry(entry_as_value v) noexcept { _u._value = v; }
         ~entry() noexcept = default;
@@ -193,7 +193,7 @@ private:
         void set(index_type s, value_type d) noexcept
         {
             clear();
-            _u._x._seq = s;
+            _u._x._seq  = s;
             _u._x._data = d;
         }
 
@@ -273,7 +273,7 @@ public:
     }
 
     mpmc_queue(const mpmc_queue&) = delete;
-    mpmc_queue(mpmc_queue&&) = delete;
+    mpmc_queue(mpmc_queue&&)      = delete;
     mpmc_queue& operator=(const mpmc_queue&) = delete;
     mpmc_queue& operator=(mpmc_queue&&) = delete;
 
@@ -555,7 +555,7 @@ public:
     template<typename F>
     [[using gnu: hot, flatten]] uint64_t consume(F&& f)
     {
-        uint64_t r{0};
+        uint64_t   r{0};
         value_type v;
         index_type i;
         while (pop(v, i))
@@ -569,7 +569,7 @@ public:
     [[using gnu: hot, flatten]] bool empty() noexcept
     {
         index_type rd_index = _read_index.load();
-        entry e{_array[rd_index].load()};
+        entry      e{_array[rd_index].load()};
 
         if (e.get_seq() == static_cast<index_type>(rd_index << 1)) return true;
         return false;
@@ -577,7 +577,7 @@ public:
     [[using gnu: hot, flatten]] [[nodiscard]] bool empty() const noexcept
     {
         index_type rd_index = _read_index.load();
-        entry e{_array[rd_index].load()};
+        entry      e{_array[rd_index].load()};
 
         if (e.get_seq() == static_cast<index_type>(rd_index << 1)) return true;
         return false;
@@ -592,7 +592,7 @@ public:
 
     [[nodiscard]] size_t capacity() const noexcept { return _array.size(); }
 
-    [[nodiscard]] constexpr size_t entry_size() const noexcept { return sizeof(entry); }
+    [[nodiscard]] constexpr size_t        entry_size() const noexcept { return sizeof(entry); }
     [[nodiscard]] static constexpr size_t size_n() { return N; }
 
     [[using gnu: used]] std::ostream& dump_state(std::ostream& os) noexcept;
@@ -602,7 +602,7 @@ public:
 private:
     std::atomic<index_type> _write_index alignas(2 * cachelinesize);
     std::atomic<index_type> _read_index alignas(2 * cachelinesize);
-    array_t _array;
+    array_t                 _array;
 };
 
 template<typename Data_t, size_t N, typename Index_t, bool lazy_push, bool lazy_pop>
@@ -615,7 +615,7 @@ template<typename DataT, size_t N, typename IndexT, bool lazy_push, bool lazy_po
 inline std::ostream& mpmc_queue<DataT, N, IndexT, lazy_push, lazy_pop>::dump_state(std::ostream& os) noexcept
 {
     auto show_entry = [&](std::ostream& eos, unsigned eindex) -> std::ostream& {
-        entry e(static_cast<entry_as_value>(_array[eindex].load()));
+        entry    e(static_cast<entry_as_value>(_array[eindex].load()));
         uint64_t seq_index = (e.get_seq() >> 1);
 
         eos << "  e[" << std::setw(3) << eindex << "]:\t " << seq_index << "\t "

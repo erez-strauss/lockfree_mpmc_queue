@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     }
     else if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'c')
     {
-        auto cons = shared_q.get_consumer();
+        auto     cons = shared_q.get_consumer();
         unsigned value{};
         while (true)
         {

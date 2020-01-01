@@ -32,10 +32,10 @@
 
 int main()
 {
-    constexpr unsigned N{100};
+    constexpr unsigned                     N{100};
     es::lockfree::mpmc_queue<unsigned, 32> q{};
-    unsigned prod_sum{0};
-    unsigned cons_sum{0};
+    unsigned                               prod_sum{0};
+    unsigned                               cons_sum{0};
 
     std::thread prod{[&]() {
         for (unsigned x = 0; x < N; ++x)

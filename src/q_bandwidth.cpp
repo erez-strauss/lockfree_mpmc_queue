@@ -110,7 +110,7 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
                   << qdepth << " producers: " << producers << " consumers: " << consumers << " for: " << millis
                   << "ms ";
         {
-            QUT1A qa{qdepth};
+            QUT1A                                  qa{qdepth};
             es::lockfree::tests::QBandwidth<QUT1A> bwt1a(qa, producers, consumers, millis);
             bwt1a.run("mpmc_queue<ff>");
         }
@@ -118,7 +118,7 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
                   << qdepth << " producers: " << producers << " consumers: " << consumers << " for: " << millis
                   << "ms ";
         {
-            QUT1B qb{qdepth};
+            QUT1B                                  qb{qdepth};
             es::lockfree::tests::QBandwidth<QUT1B> bwt1b(qb, producers, consumers, millis);
             bwt1b.run("mpmc_queue<ft>");
         }
@@ -126,7 +126,7 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
                   << qdepth << " producers: " << producers << " consumers: " << consumers << " for: " << millis
                   << "ms ";
         {
-            QUT1C qc{qdepth};
+            QUT1C                                  qc{qdepth};
             es::lockfree::tests::QBandwidth<QUT1C> bwt1c(qc, producers, consumers, millis);
             bwt1c.run("mpmc_queue<tf>");
         }
@@ -134,7 +134,7 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
                   << qdepth << " producers: " << producers << " consumers: " << consumers << " for: " << millis
                   << "ms ";
         {
-            QUT1D qd{qdepth};
+            QUT1D                                  qd{qdepth};
             es::lockfree::tests::QBandwidth<QUT1D> bwt1d(qd, producers, consumers, millis);
             bwt1d.run("mpmc_queue<tt>");
         }
@@ -187,17 +187,17 @@ public:
     void usage();
 
 private:
-    const char* _argv0;
-    unsigned _test{0};
-    unsigned _q_depth{32};
-    unsigned _readers{2};
-    unsigned _writers{2};
-    unsigned _data_bytes{8};
-    unsigned _index_bytes{4};
-    unsigned _millis{1000};
+    const char*                                     _argv0;
+    unsigned                                        _test{0};
+    unsigned                                        _q_depth{32};
+    unsigned                                        _readers{2};
+    unsigned                                        _writers{2};
+    unsigned                                        _data_bytes{8};
+    unsigned                                        _index_bytes{4};
+    unsigned                                        _millis{1000};
     constexpr static inline std::array<unsigned, 5> compile_sizes{2, 8, 128, 512, 4096};
-    bool _boost_q_flag{false};
-    bool _inplace{true};
+    bool                                            _boost_q_flag{false};
+    bool                                            _inplace{true};
 
     void args(int argc, char** argv);
 

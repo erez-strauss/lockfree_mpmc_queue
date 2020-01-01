@@ -42,15 +42,15 @@ constexpr const uint32_t ShareMPMCQueue{0x0BadBadB};
 
 struct shared_file_header
 {
-    uint32_t signature{ShareMPMCQueue};
-    uint32_t hdr_size{0};
-    uint64_t q_start;
-    uint64_t q_size_elements;
-    uint64_t q_size_bytes;
+    uint32_t             signature{ShareMPMCQueue};
+    uint32_t             hdr_size{0};
+    uint64_t             q_start;
+    uint64_t             q_size_elements;
+    uint64_t             q_size_bytes;
     std::atomic<int32_t> producer_count;
     std::atomic<int32_t> consumer_count;
-    uint32_t producers[16];
-    uint32_t consumers[16];
+    uint32_t             producers[16];
+    uint32_t             consumers[16];
 };
 
 template<typename Q>
@@ -103,25 +103,25 @@ public:
         if (sizeof(header) != r)
         {
             // create new queu
-            header.signature = ShareMPMCQueue;
-            header.hdr_size = sizeof(shared_file_header);
-            header.q_start = 4096;
+            header.signature       = ShareMPMCQueue;
+            header.hdr_size        = sizeof(shared_file_header);
+            header.q_start         = 4096;
             header.q_size_elements = Q::size_n();
-            header.q_size_bytes = sizeof(Q);
-            header.producer_count = 0;
-            header.consumer_count = 0;
+            header.q_size_bytes    = sizeof(Q);
+            header.producer_count  = 0;
+            header.consumer_count  = 0;
             ftruncate(fd, 4096 + sizeof(Q));
             write(fd, &header, sizeof(header));
-            _base = mmap(nullptr, 4096 + sizeof(Q), PROT_WRITE, MAP_SHARED, fd, 0);
+            _base   = mmap(nullptr, 4096 + sizeof(Q), PROT_WRITE, MAP_SHARED, fd, 0);
             _header = (shared_file_header*)_base;
-            _qp = new ((void*)((uint64_t)_base + 4096)) Q(Q::size_n());
+            _qp     = new ((void*)((uint64_t)_base + 4096)) Q(Q::size_n());
         }
         else if ((ShareMPMCQueue == header.signature) && (sizeof(shared_file_header) == header.hdr_size) &&
                  (4096 == header.q_start) && Q::size_n() == header.q_size_elements && sizeof(Q) == header.q_size_bytes)
         {
-            _base = mmap(nullptr, 4096 + sizeof(Q), PROT_WRITE, MAP_SHARED, fd, 0);
+            _base   = mmap(nullptr, 4096 + sizeof(Q), PROT_WRITE, MAP_SHARED, fd, 0);
             _header = (shared_file_header*)_base;
-            _qp = reinterpret_cast<Q*>((void*)((uint64_t)_base + 4096));
+            _qp     = reinterpret_cast<Q*>((void*)((uint64_t)_base + 4096));
             std::cout << "Attached successfully to shared q: '" << fname << "'\nq: " << *_qp << '\n';
         }
         else
@@ -147,8 +147,8 @@ public:
     Q* _qp{nullptr};
 
 private:
-    int _fd{-1};
+    int                 _fd{-1};
     shared_file_header* _header{nullptr};
-    void* _base{nullptr};
+    void*               _base{nullptr};
 };
 }  // namespace es::lockfree

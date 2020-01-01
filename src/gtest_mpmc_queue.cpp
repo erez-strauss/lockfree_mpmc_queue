@@ -74,9 +74,9 @@ inline void testPushPop(QT &qut)
 TEST(MPMC_Queue_FunctionalityTest, PushOne)
 {
     es::lockfree::mpmc_queue<int, 0, unsigned, false, false> q0(8);
-    es::lockfree::mpmc_queue<int, 0, unsigned, false, true> q1(8);
-    es::lockfree::mpmc_queue<int, 0, unsigned, true, false> q2(8);
-    es::lockfree::mpmc_queue<int, 0, unsigned, true, true> q3(8);
+    es::lockfree::mpmc_queue<int, 0, unsigned, false, true>  q1(8);
+    es::lockfree::mpmc_queue<int, 0, unsigned, true, false>  q2(8);
+    es::lockfree::mpmc_queue<int, 0, unsigned, true, true>   q3(8);
 
     testPushPop(q0);
     testPushPop(q1);
@@ -102,8 +102,8 @@ inline void testFullEmpty1(QT &qut)
 {
     typename QT::value_type w{0};
     typename QT::value_type r{0};
-    unsigned wloop{0};
-    unsigned rloop{0};
+    unsigned                wloop{0};
+    unsigned                rloop{0};
 
     VERBOSE(std::cerr << __PRETTY_FUNCTION__ << " q capacity: " << qut.capacity() << '\n');
     for (wloop = 0; qut.push(w); wloop++) w++;
@@ -122,9 +122,9 @@ TEST(MPMC_Queue_FunctionalityTest, FillEmpty)
     for (unsigned s = 1; s < 2048; s *= 2)
     {
         es::lockfree::mpmc_queue<int, 0, unsigned, false, false> q0(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, false, true> q1(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, true, false> q2(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, true, true> q3(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, false, true>  q1(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, true, false>  q2(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, true, true>   q3(s);
 
         testFullEmpty1(q0);
         testFullEmpty1(q1);
@@ -140,8 +140,8 @@ inline void testFullEmptyIndex(QT &qut)
     typename QT::value_type r{0};
     typename QT::index_type wi{0};
     typename QT::index_type ri{0};
-    unsigned wloop{0};
-    unsigned rloop{0};
+    unsigned                wloop{0};
+    unsigned                rloop{0};
 
     VERBOSE(std::cerr << __PRETTY_FUNCTION__ << " q capacity: " << qut.capacity() << '\n');
     for (wloop = 0; qut.push(w, wi) && wi == wloop; wloop++) w++;
@@ -165,9 +165,9 @@ TEST(MPMC_Queue_FunctionalityTest, FillEmptyIndex)
     for (unsigned s = 1; s < 2048; s *= 2)
     {
         es::lockfree::mpmc_queue<int, 0, unsigned, false, false> q0(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, false, true> q1(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, true, false> q2(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, true, true> q3(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, false, true>  q1(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, true, false>  q2(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, true, true>   q3(s);
 
         testFullEmptyIndex(q0);
         testFullEmptyIndex(q1);
@@ -183,9 +183,9 @@ inline void testFullEmptyKeepN(QT &qut)
     typename QT::value_type r{0};
     typename QT::index_type wi{0};
     typename QT::index_type ri{0};
-    unsigned wloop{0};
-    unsigned rloop{0};
-    const unsigned z{93};
+    unsigned                wloop{0};
+    unsigned                rloop{0};
+    const unsigned          z{93};
 
     VERBOSE(std::cerr << __PRETTY_FUNCTION__ << " q capacity: " << qut.capacity() << '\n');
 
@@ -208,9 +208,9 @@ TEST(MPMC_Queue_FunctionalityTest, FillKeepN)
     for (unsigned s = 1; s < 2048; s *= 2)
     {
         es::lockfree::mpmc_queue<int, 0, unsigned, false, false> q0(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, false, true> q1(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, true, false> q2(s);
-        es::lockfree::mpmc_queue<int, 0, unsigned, true, true> q3(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, false, true>  q1(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, true, false>  q2(s);
+        es::lockfree::mpmc_queue<int, 0, unsigned, true, true>   q3(s);
 
         testFullEmptyKeepN(q0);
         testFullEmptyKeepN(q1);
@@ -268,7 +268,7 @@ TEST(MPMC_Queue_FunctionalityTest, different_sizes)
         try
         {
             es::lockfree::mpmc_queue<int, 0, unsigned, false, false> q(n);
-            unsigned x{0};
+            unsigned                                                 x{0};
             for (x = 0; q.push(x); ++x)
                 ;
             EXPECT_EQ(x, q.capacity());
@@ -283,9 +283,9 @@ TEST(MPMC_Queue_FunctionalityTest, different_sizes)
 TEST(MPMC_Queue_FunctionalityTest, PushCharPointer)
 {
     es::lockfree::mpmc_queue<const char *, 2, unsigned, false, false> q0(2);
-    es::lockfree::mpmc_queue<const char *, 4, unsigned, false, true> q1(4);
+    es::lockfree::mpmc_queue<const char *, 4, unsigned, false, true>  q1(4);
     es::lockfree::mpmc_queue<const char *, 32, unsigned, true, false> q2(32);
-    es::lockfree::mpmc_queue<const char *, 64, unsigned, true, true> q3(64);
+    es::lockfree::mpmc_queue<const char *, 64, unsigned, true, true>  q3(64);
 
     q0.push("Hello");
     q1.push("World");
@@ -315,7 +315,7 @@ TEST(MPMC_Queue_FunctionalityTest, PushPopIndex)
     queue_type::index_type pop_index{0};
 
     queue_type q(4);
-    int a{0};
+    int        a{0};
 
     bool b = q.push(33, push_index) && q.push(33, push_index) && q.push(33, push_index) && q.pop(a, pop_index) &&
              q.pop(a, pop_index) && q.pop(a, pop_index) && pop_index == 2 && push_index == 2;
@@ -435,7 +435,7 @@ public:
 struct Data2
 {
     uint64_t _v;
-    uint8_t _hindex;
+    uint8_t  _hindex;
 } __attribute__((packed));
 std::ostream &operator<<(std::ostream &os, const Data2 &d)
 {
@@ -454,7 +454,7 @@ TEST(MPMC_Queue_FunctionalityTest, hash2)
 
     std::array<es::utils::hash_signature, PRODUCERS> hin_a;
     std::array<es::utils::hash_signature, PRODUCERS> hout_a;
-    std::array<spin_lock, PRODUCERS> slocks;
+    std::array<spin_lock, PRODUCERS>                 slocks;
 
     std::array<std::thread, PRODUCERS> producers;
     std::array<std::thread, CONSUMERS> consumers;
@@ -503,7 +503,7 @@ struct Data3
 {
     uint32_t _v;
     uint32_t _seq_num;
-    uint8_t _hindex;
+    uint8_t  _hindex;
 } __attribute__((packed));
 std::ostream &operator<<(std::ostream &os, const Data3 &d)
 {
@@ -521,7 +521,7 @@ TEST(MPMC_Queue_FunctionalityTest, hash3)
 
     std::array<es::utils::hash_signature, PRODUCERS> hin_a;
     std::array<es::utils::hash_signature, PRODUCERS> hout_a;
-    std::array<spin_lock, PRODUCERS> slocks;
+    std::array<spin_lock, PRODUCERS>                 slocks;
 
     std::array<std::thread, PRODUCERS> producers;
     std::array<std::thread, CONSUMERS> consumers;

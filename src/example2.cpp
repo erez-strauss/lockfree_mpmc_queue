@@ -34,32 +34,35 @@
 int main()
 {
     es::lockfree::mpmc_queue<unsigned> q{32};
-
-    constexpr unsigned N{1000000};
-    constexpr unsigned P{2};
-    std::atomic<uint64_t> prod_sum{0};
-    std::atomic<uint64_t> cons_sum{0};
+    constexpr unsigned                 N{1000000};
+    constexpr unsigned                 P{2};
+    std::atomic<uint64_t>              prod_sum{0};
+    std::atomic<uint64_t>              cons_sum{0};
 
     auto producer = [&]() {
+        uint64_t m{0};
         for (unsigned x = 0; x < N; ++x)
         {
             while (!q.push(x))
                 ;
-            prod_sum += x;
+            m += x;
         }
+        prod_sum += m;
     };
     std::vector<std::thread> producers;
     producers.resize(P);
     for (auto& p : producers) p = std::thread{producer};
 
     auto consumer = [&]() {
+        uint64_t m{0};
         unsigned v{0};
         for (unsigned x = 0; x < N; ++x)
         {
             while (!q.pop(v))
                 ;
-            cons_sum += v;
+            m += v;
         }
+        cons_sum += m;
     };
     std::vector<std::thread> consumers;
     consumers.resize(P);
