@@ -41,6 +41,7 @@ http://github.com/erez-strauss/lockfree_mpmc_queue/
 * with small enough items and indexes, can use compare_exchange operations on 8 bytes
 * sequenced operations - each pop/push has an operation sequence number, successful push()/pop() have sequence numbers which are accessible to the user through push(value_type, index_type&) and pop(vale_type&, index_type&)
 
+
 ## Usage:
 
 
@@ -160,20 +161,22 @@ queue is faster by two or three times than boost::lockfree::queue on some of the
 ### Implementations Details
 
 1. push(data_type d) operation is composed from the following operations:
-  * load _write_index, from the write index get the index into the _array[] by bitwise AND with _index_mask
-  * load the _array[] entry, and check the three cases:
-  * 1. empty with the same index - then try to fill it in with a compare_and_set operation  changing the _array[] entry from empty to full, including the copy of the data.
-  * 2. full with index equal to current index - that means that someone wrote to the _array[] entry and filled it, and we have to co-oparate and increase the write_index.
-  * 3. full with previous index, the queue is full, then we return false
-  * if we did not succeed with any of the above, we reload the write_index and loop again.
-2. pop(value_type& d) - similar to push
- * load read_index from _read_index, and calc the _array[] entry
- * if entry is full with with current read_index, try compare_and_set on the array entry whith new value which is the next empty value (current read_index + queue size)
- * if empty or full with index of equal to current read_index+size, then increament the read_index, as someone clear the entry and place the next empty state (which might have be filled by a writer/producer)
- * if empty with current index - queue is empy and return false
- * if non of the above, re-load read_index and try again.
+    * load _write_index, from the write index get the index into the _array[] by bitwise AND with _index_mask
+    * load the _array[] entry, and check the three cases:
+        * empty with the same index - then try to fill it in with a compare_and_set operation  changing the _array[] entry from empty to full, including the copy of the data.
+        * full with index equal to current index - that means that someone wrote to the _array[] entry and filled it, and we have to co-oparate and increase the write_index.
+        * full with previous index, the queue is full, then we return false
+    * if we did not succeed with any of the above, we reload the write_index and loop again.
 
-In short, push/pop - has two compare_and_set operations, first one on the array, and then on the index.
+2. pop(value_type& d) - similar to push
+   * load read_index from _read_index, and calc the _array[] entry
+       * if entry is full with with current read_index, try compare_and_set on the array entry whith new value which is the next empty value (current read_index + queue size)
+       * if empty or full with index of equal to current read_index+size, then increament the read_index, as someone clear the entry and place the next empty state (which might have be filled by a writer/producer)
+       * if empty with current index - queue is empy and return false
+   * if non of the above, re-load read_index and try again.
+
+In short, push/pop - has two compare_and_set operations, first one on the array entry, and then on the index.
+
 * As the compare_and_set operations can be executed by different threads, there is also an option to instantiate the mpmc_queue<> in lazy mode, where the push/op return after the successful _array[] operation, and leave the indexes to be increamented by the next push/pop operation (in the same thread or other).
 
 
@@ -205,6 +208,100 @@ if (cons.pop(value))
 std::Cout <<  ( value == 123 )
 ```
 
+## MPMC Queue Pack
+
+The mpmc_queue<> performs best, with higher bandwidth and lower latency, in the case of
+ single-producer and single-consumer as in this case it is wait free.
+The mpmc_queue_pack<> groups multiple mpmc_queue<>s (G) into a single queue,
+ the number of such internal queues is compile time template parameter,
+  but it does not impose a limit on the number of run-time producers or consumers.
+In case the run-time number of producers is up to G, the performance of the
+ mpmc_queue_pack<> will be close to best performing case for the
+  internal mpmc_queue<> times number of producers.
+
+The mpmc_queue_pack.h defines:
+
+```
+// Q - The basic mpmc queue type to hold
+// G - How many queues are in a group/pack of mpmc_queues.
+// K - Every how many successful pop, force going to the next internal queue with data
+template<typename Q, unsigned G, unsigned K> class mpmc_queue_pack {
+// ....
+
+template<typename QT> struct producer_accessor;
+template<typename QT> struct consumer_accessor;
+
+```
+In order to use the pack of queues as a single queue, we need to use the accessor, to enqueue and dequeue.
+Each producer uses a single internal mpmc_queue<> for sending, which guarentees that the order is saved, for each producer.
+Each consumer consumes up to K element from an internal mpmc_queue<> before checking for available data on the other internal mpmc_queue<>s in the pack.
+
+The tradeoff using a mpmc_queue_pack<> vs mpmc_queue<> are:
+
+mpmc_queue<>
+ - fully serializable
+ - fails push() when the whole queue entries are in use
+ - simple to use, does not require accessor
+ - non-wait free
+
+mpmc_queue_pack<>
+ - order is defined only within a sender
+ - wait-free, in case run-time producers is less then G.
+ - push() fails when the dedicated internal mpmc_queue<> is full
+ - requires accessors to use.
+ - The G,K parameters require tuning for specific usage.
+
+both the mpmc_queue<> and mpmc_queue_pack<> are:
+ - lockless
+ - bounded, size given at compile time or initialization time
+ - double word CAS
+ - can use single word CAS, for transfer of small enough data type (up to four bytes messages)
+ - can be used internally between threads of a single process, or between processes.
+ - can use 64 bits sequence number, default 32 bits
+
+The accessor for a single mpmc_queue<> is a reference type to the mpmc_queue<>.
+
+Using accessor-type for a given specific queue type enables writing the same template code to use both single mpmc_queue<> or a group of them in mpmc_queue_pack<>.
+
+Example:
+```cpp
+#include <mpmc_queue_pack.h>
+
+using queue_pack_type = es::lockfree::mpmc_queue_pack<es::lockfree::mpmc_queue<uint64_t, 0, uint32_t, false, false>, 4, 16>;
+
+    using producer_type = typename es::lockfree::producer_accessor<queue_pack_type>::type;
+    using consumer_type = typename es::lockfree::consumer_accessor<queue_pack_type>::type;
+
+    std::unique_ptr<queue_pack_type> qpack = std::make_unique<queue_pack_type>(16);
+
+    producer_type p1{*qpack};
+    producer_type p2{*qpack};
+
+    consumer_type c1{*qpack};
+    consumer_type c2{*qpack};
+
+    p1.push(1024);
+    p2.push(1025);
+
+    queue_pack_type::value_type v0{0};
+    queue_pack_type::value_type v1{0};
+
+    c1.pop(v0);
+    c2.pop(v1);
+
+    std::cout << "v0: " << v0 << " v1: " << v1 << '\n';
+
+```
+The example above shows a mpmc_queue_pack<> holding a group of four mpmc_queue<>s.
+
+The mpmc_queue_pack<> requires its user to get an accessor, producer or consumer, in order to push / pop data into the mpmc_queue_pack.
+
+The pop() operation from mpmc_queue_pack<> is scanning the grouped mpmc_queue<>s for data, once it finds data to consume, it will provide it to the caller, and will continue to pop element from the same mpmc_queue<>, in our example above, up to 16 pop()s in a row, then, it will scan the other queues in the group.
+
+The **stc/pack_benchmark.cpp** benchmark runs the same templated benchmark code on mpmc_queue<> and mpmc_queue_pack<> and compare the gain from using the group of queues.
+
+
+
 ## Installation
 * make -- builds the tests and the performance benchmarks in the build directory
 * make cmake -- call cmake to build the same as above
@@ -230,7 +327,7 @@ Use the 'make report' to run the q_bandwidth.cpp, it will generate performance r
 the performance report can be processed to generate the summary below per data size.
 
 The benchmark tests the four different favors of the mpmc_queue<> which are differ with regardi
-to the incrementing the write and read indexes. 
+to the incrementing the write and read indexes.
 
 Here are results from laptop, hyper-threading is on.
 
@@ -268,8 +365,10 @@ boostq  2-to-2:  data_sz: 12 index_sz: - queue_name: boost:lf:queue capacity: 64
 
 ## Next steps
 
-* performance report summary
+* detailed / summary benchmarks
+
 * Collecting performance reports from different machines, platforms.
+
 * You can run, test and send me performance report files
 
 ## Feedback

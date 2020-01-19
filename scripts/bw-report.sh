@@ -71,6 +71,11 @@ do
 done
 echo "End at: " $(date)
 ) 2>&1 | tee ${REPORTFILE}
+
+if [[ -x /usr/bin/perl && -x ./scripts/report-processing.pl ]] ; then
+    ./scripts/report-processing.pl ${REPORTFILE} >> ${REPORTFILE}
+fi
+
 echo "report file: ${REPORTFILE}"
 
 exit 0

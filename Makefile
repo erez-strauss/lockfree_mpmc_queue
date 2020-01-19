@@ -6,7 +6,7 @@ VPATH := src:.
 GTEST_INCLUDEDIR := $(shell if [ -d /usr/include/gtest ]; then echo /usr/include ; fi )
 GTEST_LIBDIR := $(shell if [ -f /usr/lib64/libgtest.so ]; then echo /usr/lib64 ; fi )
 
-TARGETS:= $(BDIR)/shared_q_test $(BDIR)/q_bandwidth $(BDIR)/example1  $(BDIR)/example2 
+TARGETS:= $(BDIR)/shared_q_test $(BDIR)/q_bandwidth $(BDIR)/example1  $(BDIR)/example2 $(BDIR)/pack_benchmark
 
 ifneq ($(GTEST_INCLUDEDIR),)
 	TARGETS += $(BDIR)/gtest_mpmc

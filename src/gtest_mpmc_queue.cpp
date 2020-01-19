@@ -34,7 +34,6 @@
 #include <atomic>
 #include <iostream>
 #include <mutex>
-#include <sstream>
 #include <thread>
 
 struct Globals
