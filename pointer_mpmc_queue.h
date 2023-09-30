@@ -3,7 +3,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2019-2022 Erez Strauss, erez@erezstrauss.com
+// Copyright (c) 2019-2023 Erez Strauss, erez@erezstrauss.com
 //  http://github.com/erez-strauss/lockfree_mpmc_queue/
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,25 +35,25 @@ template<template<typename, size_t, typename, bool, bool> class Q, typename T, s
          template<typename...> class P = std::unique_ptr, bool lazy_push = false, bool lazy_pop = false>
 class pointer_mpmc_queue
 {
-    using ul_type      = P<T>;
-    using pointer_type = typename ul_type::pointer;
+    using uniqptr_type      = P<T>;
+    using internal_type = typename uniqptr_type::pointer;
     using index_type   = IndexT;
 
-    static_assert(sizeof(pointer_type) == sizeof(void*), "mismatch type size");
-    static_assert(sizeof(ul_type) == sizeof(void*), "mismatch type size");
+    static_assert(sizeof(internal_type) == sizeof(void*), "mismatch type size");
+    static_assert(sizeof(uniqptr_type) == sizeof(void*), "mismatch type size");
 
 public:
     pointer_mpmc_queue(unsigned sz) : _queue(sz) {}
     ~pointer_mpmc_queue()
     {
-        pointer_type nv{};
+        internal_type nv{};
         while (_queue.pop(nv))
         {
-            ul_type up{nv};
+            uniqptr_type up{nv};
         }
     }
 
-    bool push(ul_type&& v)
+    bool push(uniqptr_type&& v)
     {
         if (_queue.push(v.get()))
         {
@@ -63,9 +63,9 @@ public:
         return false;
     }
 
-    bool pop(ul_type& v)
+    bool pop(uniqptr_type& v)
     {
-        pointer_type nv{};
+        internal_type nv{};
         if (_queue.pop(nv))
         {
             v.reset(nv);
@@ -74,7 +74,7 @@ public:
         return false;
     }
 
-    bool push(ul_type&& v, index_type& i)
+    bool push(uniqptr_type&& v, index_type& i)
     {
         if (_queue.push(v.get(), i))
         {
@@ -84,9 +84,9 @@ public:
         return false;
     }
 
-    bool pop(ul_type& v, index_type& i)
+    bool pop(uniqptr_type& v, index_type& i)
     {
-        pointer_type nv{};
+        internal_type nv{};
         if (_queue.pop(nv, i))
         {
             v.reset(nv);
@@ -104,7 +104,7 @@ public:
     auto capacity() const { return _queue.capacity(); }
 
 private:
-    Q<pointer_type, N, IndexT, lazy_push, lazy_pop> _queue;
+    Q<internal_type, N, IndexT, lazy_push, lazy_pop> _queue;
 };
 
 }  // namespace es::lockfree
