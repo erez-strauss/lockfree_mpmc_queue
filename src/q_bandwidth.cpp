@@ -82,7 +82,7 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
 
             std::cout << "Q BW: data size: " << sizeof(DT) << " -     -     -"
                       << " capacity: " << std::setw(3) << qdepth << " producers: " << producers
-                      << " conuumers: " << consumers << " for: " << millis << "ms ";
+                      << " consumers: " << consumers << " for: " << millis << "ms ";
 
             es::lockfree::tests::QBandwidth<QUT2> bwt2(boost_q, producers, consumers, millis);
             bwt2.run("boost:lf:queue");
@@ -94,7 +94,7 @@ void test_bandwidth_mpmc_queue(size_t qdepth = Q_DEPTH, unsigned producers = 1, 
 
             std::cout << "Q BW: data size: " << sizeof(DT) << " -     -     -"
                       << " capacity: " << std::setw(3) << qdepth << " producers: " << producers
-                      << " conuumers: " << consumers << " for: " << millis << "ms ";
+                      << " consumers: " << consumers << " for: " << millis << "ms ";
 
             es::lockfree::tests::QBandwidth<QUT2> bwt2(boost_q, producers, consumers, millis);
             bwt2.run("boost:lf:queue");

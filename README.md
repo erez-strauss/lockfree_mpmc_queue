@@ -388,8 +388,10 @@ Dmitry Vyukov MPMC Queue
  This queue, uses compare_exchange on the read/write indexes and sequence numbers within the buffer entries.
 
 Boost MPMC lockfree
-*   https://www.boost.org/doc/libs/1_71_0/doc/html/boost/lockfree/queue.html
+*   https://www.boost.org/doc/libs/1_83_0/doc/html/boost/lockfree/queue.html
 
+Lock free:
+*   https://en.wikipedia.org/wiki/Non-blocking_algorithm
 
 ## LICENSE
 

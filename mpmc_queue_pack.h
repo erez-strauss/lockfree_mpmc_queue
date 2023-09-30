@@ -77,7 +77,7 @@ public:
         {
         }
 
-        auto pop(value_type& d)
+        bool pop(value_type& d)
         {
             if (_read_queue->pop(d))
             {

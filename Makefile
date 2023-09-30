@@ -15,7 +15,7 @@ endif
 ISBOOSTAVAILABLE:=$(shell if [ -f /usr/include/boost/lockfree/queue.hpp ] ; then echo 1 ; else echo 0 ; fi)
 
 #CXX:=g++
-CXX:=clang++
+#CXX:=clang++
 #CXXFLAGS:= --std=c++17 -mcx16 -pthread -W -Wall -Wshadow -Wextra -Wpedantic -I. -Isrc -O2 -ggdb3 -lpthread
 CXXFLAGS:= --std=c++17 -mcx16 -pthread -W -Wall -Wshadow -Wextra -Wpedantic -I. -Isrc -O3 -march=native -mtune=native -flto
 LDFLAGS := -lpthread
@@ -26,7 +26,7 @@ all: $(TARGETS)
 
 
 $(BDIR)/gtest_mpmc: $(BDIR)/gtest_mpmc_queue.o
-	$(CXX) $(CXXFLAGS) -I. -Isrc -DGTEST_HAS_PTHREAD=1 -pthread $< -l gtest -latomic -o $@
+	$(CXX) $(CXXFLAGS) -I. -Isrc -DGTEST_HAS_PTHREAD=1 -pthread $< -l gtest -o $@
 
 $(BDIR)/gtest_mpmc_queue.o: gtest_mpmc_queue.cpp mpmc_queue.h | $(BDIR)/.f
 	$(CXX) $(CXXFLAGS) -I. -Isrc -DGTEST_HAS_PTHREAD=1 -pthread $< -c -o $@
@@ -74,7 +74,7 @@ $(BDIR)/.f:
 
 cmake:
 	mkdir -p cbuild
-	(cd cbuild ; CXX=/usr/lib64/ccache/clang++ CC=/usr/lib64/ccache/clang cmake .. ; CXX=/usr/lib64/ccache/clang++ CC=/usr/lib64/ccache/clang make -j )
+	(cd cbuild ; CXX=$(CXX) CC=$(CC) cmake .. ; CXX=$(CXX) CC=$(CC) make -j )
 
 reformat:
 	@perl -i -pe 's/	/    /g' $$(find -name '*.h' -o -name '*.cpp')

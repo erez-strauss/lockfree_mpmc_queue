@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <climits>
 #include <cstdint>
@@ -272,10 +273,10 @@ public:
             ;
     }
 
-    mpmc_queue(const mpmc_queue&) = delete;
-    mpmc_queue(mpmc_queue&&)      = delete;
+    mpmc_queue(const mpmc_queue&)            = delete;
+    mpmc_queue(mpmc_queue&&)                 = delete;
     mpmc_queue& operator=(const mpmc_queue&) = delete;
-    mpmc_queue& operator=(mpmc_queue&&) = delete;
+    mpmc_queue& operator=(mpmc_queue&&)      = delete;
 
     [[using gnu: hot, flatten]] bool enqueue(value_type d) noexcept { return push(d); }
 

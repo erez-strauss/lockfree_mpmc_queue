@@ -110,8 +110,13 @@ public:
             header.q_size_bytes    = sizeof(Q);
             header.producer_count  = 0;
             header.consumer_count  = 0;
-            ftruncate(fd, 4096 + sizeof(Q));
-            write(fd, &header, sizeof(header));
+            auto r0 = ftruncate(fd, 4096 + sizeof(Q));
+            auto r1 = write(fd, &header, sizeof(header));
+	    if (r0 || r1 != sizeof(header))
+	    {
+            	std::cout << "Failed to access shared q: '" << fname << '\n';
+		throw std::runtime_error ( "Failed to access shared q" );
+	    }
             _base   = mmap(nullptr, 4096 + sizeof(Q), PROT_WRITE, MAP_SHARED, fd, 0);
             _header = (shared_file_header*)_base;
             _qp     = new ((void*)((uint64_t)_base + 4096)) Q(Q::size_n());

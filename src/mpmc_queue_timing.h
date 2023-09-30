@@ -299,7 +299,8 @@ void QBandwidth<Q>::run(const std::string& name)
     std::string emsg{};
 
     std::cout << name << " push: " << total_push << " pop: " << total_pop << (total_push == total_pop ? "" : " ERROR")
-              << " tsc: " << (run_end - run_start) << " tsc/op: " << ((run_end - run_start) / total_push) << emsg
+              << " tsc: " << (run_end - run_start)
+              << " tsc/op: " << (total_push != 0 ? (run_end - run_start) / total_push : 0) << emsg
               << " push/pop per sec: " << (1000 * total_push * tsc_per_milli() / (run_end - run_start)) << '\n';
     if (total_push != total_pop)
         std::cout << "Q: push/pop difference: " << (total_push - total_pop) << " " << _q << '\n';

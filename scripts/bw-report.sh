@@ -31,7 +31,7 @@ numactl -H
 numactl -s
 
 CPUCOUNT=$(lscpu | awk '/^CPU\(s\):/{print $2}')
-MILLISECONDS=200; # 20 100 1000
+MILLISECONDS=400; # 20 100 1000
 DEPTHS=( 1 2 4 8 64 )
 PRODUCERS=( 1 2 4 8 16 )
 CONSUMERS=( 1 2 4 8 16 )
