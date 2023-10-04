@@ -345,9 +345,7 @@ public:
             else if (static_cast<index_type>(e.get_seq() | 1U) ==
                      static_cast<index_type>(((rd_index + _array.size()) << 1) | 1U))
             {
-                index_type tmp_index = rd_index;
-                ++rd_index;
-                _read_index.compare_exchange_strong(tmp_index, rd_index);
+                _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
             else if (e.get_seq() == static_cast<index_type>(rd_index << 1))
             {
