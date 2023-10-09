@@ -456,6 +456,14 @@ public:
         }
     }
 
+    [[using gnu: hot, flatten]] bool exchange(index_type& i, value_type old_value, value_type new_value) noexcept
+    {
+        entry old_entry{static_cast<index_type>((i << 1) | 1U), old_value};
+        entry new_entry{static_cast<index_type>((i << 1) | 1U), new_value};
+
+        return _array[i].compare_exchange(old_entry, new_entry);
+    }
+
     [[using gnu: hot]] bool peek(value_type& d) noexcept
     {
         index_type rd_index = _read_index.load();

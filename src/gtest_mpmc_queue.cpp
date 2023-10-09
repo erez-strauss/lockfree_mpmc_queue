@@ -570,6 +570,50 @@ TEST(MPMC_Queue_FunctionalityTest, hash3)
     EXPECT_TRUE(same);
 }
 
+TEST(MPMC_Queue_FunctionalityTest, Exchange32)
+{
+    es::lockfree::mpmc_queue<int, 0, unsigned, false, false> q0(4);
+    unsigned ix {0};
+
+    q0.push(1);
+    q0.push(2);
+    q0.push(3, ix);
+    q0.push(4);
+    auto bt = q0.exchange(ix, 3, 17);
+    auto bf = q0.exchange(ix, 3, 99);
+
+    int a{0}, b{0}, c{0}, d{0};
+    q0.pop(a);
+    q0.pop(b);
+    q0.pop(c);
+    q0.pop(d);
+
+    EXPECT_TRUE(a == 1 && b == 2 && c == 17 && d == 4 && bt == true && bf == false);
+}
+
+TEST(MPMC_Queue_FunctionalityTest, Exchange64)
+{
+    es::lockfree::mpmc_queue<int64_t, 0, uint64_t, false, false> q0(4);
+    uint64_t ix {0};
+
+    q0.push(1);
+    q0.push(2);
+    q0.push(3, ix);
+    q0.push(4);
+    auto bt = q0.exchange(ix, 3, 17);
+    auto bf = q0.exchange(ix, 3, 99);
+
+    int64_t a{0}, b{0}, c{0}, d{0};
+    q0.pop(a);
+    q0.pop(b);
+    q0.pop(c);
+    q0.pop(d);
+
+    EXPECT_TRUE(a == 1 && b == 2 && c == 17 && d == 4 && bt == true && bf == false);
+}
+
+
+
 int main(int argc, char **argv)
 {
     std::cerr << "Gtest main(" << argc << ", argv) from: " __FILE__ "\n";
