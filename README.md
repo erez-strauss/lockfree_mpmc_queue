@@ -2,7 +2,9 @@
 atomic, lockfree, multi producer, multi consumer queue
 
 ## Available at
-http://github.com/erez-strauss/lockfree_mpmc_queue/
+Github repo: http://github.com/erez-strauss/lockfree_mpmc_queue/ <br>
+The CppCon 2023 presentation on youtube: https://youtu.be/M3v2GfeGJYs <br>
+The slides: [CppCon2023_ES_Lockfree_MPMC_Queue_Oct3.pdf](https://github.com/erez-strauss/lockfree_mpmc_queue/files/12827231/CppCon2023_ES_Lockfree_MPMC_Queue_Oct3.pdf)
 
 ## The queue requirements
 
