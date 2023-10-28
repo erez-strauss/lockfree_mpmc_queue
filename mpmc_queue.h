@@ -282,10 +282,9 @@ public:
 
     [[using gnu: hot, flatten]] bool push(value_type d) noexcept
     {
-        index_type wr_index = _write_index.load();
-
         while (true)
         {
+            index_type wr_index = _write_index.load();
             index_type seq = _array[wr_index].get_seq();
 
             if (seq == static_cast<index_type>(wr_index << 1))
@@ -312,8 +311,6 @@ public:
             {
                 return false;
             }
-
-            wr_index = _write_index.load();
         }
     }
 
@@ -335,9 +332,7 @@ public:
                     d = e.get_data();
                     if constexpr (!lazy_pop)
                     {
-                        index_type tmp_index = rd_index;
-                        ++rd_index;
-                        _read_index.compare_exchange_strong(tmp_index, rd_index);
+                        _read_index.compare_exchange_strong(rd_index, rd_index + 1);
                     }
                     return true;
                 }
@@ -359,10 +354,9 @@ public:
 
     [[using gnu: hot, flatten]] bool push(value_type d, index_type& i) noexcept
     {
-        index_type wr_index = _write_index.load();
-
         while (true)
         {
+            index_type wr_index = _write_index.load();
             index_type seq = _array[wr_index].get_seq();
 
             if (seq == static_cast<index_type>(wr_index << 1))
@@ -390,8 +384,6 @@ public:
             {
                 return false;
             }
-
-            wr_index = _write_index.load();
         }
     }
 
@@ -399,11 +391,11 @@ public:
 
     [[using gnu: hot, flatten]] bool pop(value_type& d, index_type& i) noexcept
     {
-        index_type rd_index = _read_index.load();
-
         while (true)
         {
+            index_type rd_index = _read_index.load();
             entry e{_array[rd_index].load()};
+
             if (e.get_seq() == static_cast<index_type>((rd_index << 1) | 1U))
             {
                 entry empty_entry{static_cast<index_type>((rd_index + _array.size()) << 1U)};
@@ -414,9 +406,7 @@ public:
                     i = rd_index;
                     if constexpr (!lazy_pop)
                     {
-                        index_type tmp_index = rd_index;
-                        ++rd_index;
-                        _read_index.compare_exchange_strong(tmp_index, rd_index);
+                        _read_index.compare_exchange_strong(rd_index, rd_index + 1);
                     }
                     return true;
                 }
@@ -424,15 +414,12 @@ public:
             else if (static_cast<index_type>(e.get_seq() | 1U) ==
                      static_cast<index_type>(((rd_index + _array.size()) << 1) | 1U))
             {
-                index_type tmp_index = rd_index;
-                ++rd_index;
-                _read_index.compare_exchange_strong(tmp_index, rd_index);
+                _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
             else if (e.get_seq() == static_cast<index_type>(rd_index << 1))
             {
                 return false;
             }
-            rd_index = _read_index.load();
         }
     }
 
@@ -466,10 +453,9 @@ public:
 
     [[using gnu: hot]] bool peek(value_type& d) noexcept
     {
-        index_type rd_index = _read_index.load();
-
         while (true)
         {
+            index_type rd_index = _read_index.load();
             entry e{_array[rd_index].load()};
 
             if (e.get_seq() == static_cast<index_type>(rd_index << 1))
@@ -486,17 +472,14 @@ public:
             {
                 _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
-
-            rd_index = _read_index.load();
         }
     }
 
     [[using gnu: hot]] bool peek(value_type& d, index_type& i) noexcept
     {
-        index_type rd_index = _read_index.load();
-
         while (true)
         {
+            index_type rd_index = _read_index.load();
             entry e{_array[rd_index].load()};
 
             if (e.get_seq() == static_cast<index_type>(rd_index << 1))
@@ -514,18 +497,15 @@ public:
             {
                 _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
-
-            rd_index = _read_index.load();
         }
     }
 
     template<typename F>
     [[using gnu: hot, flatten]] bool pop_if(F& f, value_type& d) noexcept
     {
-        index_type rd_index = _read_index.load();
-
         while (true)
         {
+            index_type rd_index = _read_index.load();
             entry e{_array[rd_index].load()};
 
             if (e.get_seq() == static_cast<index_type>(rd_index << 1))
@@ -554,8 +534,6 @@ public:
             {
                 _read_index.compare_exchange_strong(rd_index, rd_index + 1);
             }
-
-            rd_index = _read_index.load();
         }
     }
 
